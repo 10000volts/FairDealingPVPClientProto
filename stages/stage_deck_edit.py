@@ -1,6 +1,6 @@
 from stages.stage_base import StageBase
 from utils.color import color, color_print, EColor
-from utils.common import list_cards, card_detail
+from utils.common import list_cards, card_detail, random_deck
 from utils.constants import ECardType, card_type,\
     employee_type, strategy_type
 import json
@@ -66,7 +66,11 @@ class StageDeckEdit(StageBase):
         color_print('效果: {}'.format(c['effect']))
 
     def random_deck(self):
-        pass
+        deck = json.loads(random_deck().text)
+        for cn in deck.keys():
+            color_print('{}: {}'.format(color(cn, EColor.EMPHASIS),
+                                        deck[cn]))
+
 
     def new(self, deck_name):
         pass

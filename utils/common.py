@@ -84,3 +84,6 @@ def list_cards():
 
 def card_detail(card_name):
     return __send_message(path='cards/dtl/{}/'.format(card_name))
+
+def random_deck():
+    return __send_message(path='cards/sealed-deck/?pid=1&pack_count=1')

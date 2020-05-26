@@ -11,6 +11,8 @@ class EColor(Enum):
     DEFAULT_COLOR = 0
     # em
     PLAYER_NAME = 33
+    # emn
+    EMPHASIS = 33
 
     # ct
     TRUMP_CARD = 33

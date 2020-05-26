@@ -8,7 +8,7 @@ server = 'http://47.113.95.132:8082/'
 DEBUG = int(os.getenv('DEBUG', 1))
 
 
-def __send_message(path, data, method='GET', request_retry_times=0,
+def __send_message(path, data=None, method='GET', request_retry_times=0,
                    request_time_out=120, request_break_time=0, check_status_code=True):
     url = "{}/{}".format(server, path)
 
@@ -64,3 +64,6 @@ def login(user_name, pwd):
         return True
     return False
 
+
+def logout():
+    __send_message(path='player/logout/')

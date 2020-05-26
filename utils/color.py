@@ -1,12 +1,14 @@
 from custom.e_color import EColor
 
 _color = {EColor.DEFAULT_COLOR.value: '<dc--|{}>',
-          EColor.PLAYER_NAME.value: '<pn--|{}>',
+          EColor.PLAYER_NAME.value: '<em--|{}>',
+          EColor.EMPHASIS.value: '<emn-|{}>',
 
           EColor.TRUMP_CARD.value: '<ct--|{}>'}
 
 _color_ind = {'<dc--|': EColor.DEFAULT_COLOR.value,
-              '<pn--|': EColor.PLAYER_NAME.value,
+              '<em--|': EColor.PLAYER_NAME.value,
+              '<emn-|': EColor.EMPHASIS.value,
 
               '<ct--|': EColor.TRUMP_CARD.value,}
 

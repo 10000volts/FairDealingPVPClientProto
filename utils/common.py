@@ -5,6 +5,8 @@ from time import sleep
 import os
 
 server = 'http://47.113.95.132:8082/'
+session_id = None
+
 DEBUG = int(os.getenv('DEBUG', 1))
 
 
@@ -14,6 +16,10 @@ def __send_message(path, data=None, method='GET', request_retry_times=0,
 
     request_dict = dict()
 
+    # 装填请求头
+    if session_id is not None:
+        request_dict['headers'] = dict()
+        request_dict['headers']['cookie'] = 'sessionid={}'.format(session_id)
     # 填装请求报文
     if method == 'POST':
         request_dict['data'] = data
@@ -58,9 +64,12 @@ def login(user_name, pwd):
     :param pwd: 密码明文。HTTPS协议下可确保链路安全。
     :return:
     """
-    if __send_message(path='player/login/',
+    res = __send_message(path='player/login/',
                       data={'user_name': user_name, 'pwd': pwd},
-                      method='POST'):
+                      method='POST')
+    global session_id
+    session_id = res.cookies['sessionid']
+    if res is not None:
         return True
     return False
 

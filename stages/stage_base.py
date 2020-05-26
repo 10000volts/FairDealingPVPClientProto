@@ -22,4 +22,4 @@ class StageBase:
 
     def logout_and_exit(self):
         logout()
-        # sys.exit()
+        sys.exit()

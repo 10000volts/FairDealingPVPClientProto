@@ -9,12 +9,14 @@ class StageBase:
         self.cmd_set = dict()
         self.cmd_set['-h'] = (self.print_help, '获取帮助。')
         self.cmd_set['exit'] = (self.logout_and_exit, '退出并注销登录。')
+        self.next_stage: StageBase = None
 
     def enter(self):
-        while True:
+        while self.next_stage is None:
             cmd = input("请输入指令。(键入-h获得帮助)")
             if cmd in self.cmd_set:
                 self.cmd_set[cmd][0]()
+        self.next_stage.enter()
 
     def print_help(self):
         for cmd in self.cmd_set.keys():

@@ -17,6 +17,6 @@ class StageLogin:
                 color_print('{}，欢迎您的到来!'.format(color(user_name, EColor.PLAYER_NAME)))
                 break
             else:
-                color_print('用户名或密码错误orz')
+                color_print('用户名或密码错误orz', EColor.ERROR)
         stm = StageMain()
         stm.enter()

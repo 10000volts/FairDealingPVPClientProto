@@ -3,25 +3,40 @@ from custom.e_color import EColor
 _color = {EColor.DEFAULT_COLOR.value: '<dc--|{}>',
           EColor.PLAYER_NAME.value: '<em--|{}>',
           EColor.EMPHASIS.value: '<emn-|{}>',
+          EColor.ERROR.value: '<err-|{}>',
 
-          EColor.TRUMP_CARD.value: '<ct--|{}>'}
+          EColor.TRUMP_CARD.value: '<ct--|{}>',
+          EColor.GOOD_CARD.value: '<cg--|{}>',
+          EColor.COMMON_CARD.value: '<cc--|{}>',
+
+          EColor.ATK.value: '<atk-|{}>',
+          EColor.DEF.value: '<def-|{}>',
+          }
 
 _color_ind = {'<dc--|': EColor.DEFAULT_COLOR.value,
               '<em--|': EColor.PLAYER_NAME.value,
               '<emn-|': EColor.EMPHASIS.value,
+              '<err-|': EColor.ERROR.value,
 
-              '<ct--|': EColor.TRUMP_CARD.value,}
+              '<ct--|': EColor.TRUMP_CARD.value,
+              '<cg--|': EColor.GOOD_CARD.value,
+              '<cc--|': EColor.COMMON_CARD.value,
+
+              '<atk-|': EColor.ATK.value,
+              '<def-|': EColor.DEF.value,
+              }
 
 
-def color_print(text: str):
+def color_print(text: str, c=EColor.DEFAULT_COLOR):
     """
-    上色并输出。最外层将自动涂上一层默认颜色。
+    上色并输出。最外层将自动涂上一层指定的颜色。
     :param text:
+    :param c:
     :return:
     """
     stack = list()
 
-    text = color(text, EColor.DEFAULT_COLOR)
+    text = color(text, c)
     stack.append(0)
     res_text = ''
 
@@ -47,7 +62,7 @@ def color_print(text: str):
     print(res_text)
 
 
-def color(text: str, c):
+def color(text: str, c=EColor.DEFAULT_COLOR):
     """
     上色。
     :param text:

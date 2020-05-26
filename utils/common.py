@@ -67,12 +67,20 @@ def login(user_name, pwd):
     res = __send_message(path='player/login/',
                       data={'user_name': user_name, 'pwd': pwd},
                       method='POST')
-    global session_id
-    session_id = res.cookies['sessionid']
     if res is not None:
+        global session_id
+        session_id = res.cookies['sessionid']
         return True
     return False
 
 
 def logout():
     __send_message(path='player/logout/')
+
+
+def list_cards():
+    return __send_message(path='cards/list/')
+
+
+def card_detail(card_name):
+    return __send_message(path='cards/dtl/{}/'.format(card_name))

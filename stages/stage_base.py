@@ -13,9 +13,21 @@ class StageBase:
 
     def enter(self):
         while self.next_stage is None:
-            cmd = input("请输入指令。(键入-h获得帮助)")
-            if cmd in self.cmd_set:
-                self.cmd_set[cmd][0]()
+            cmd = input("请输入指令。(键入-h获得帮助) ")
+            el = cmd.split(' ')
+            ins = el[0]
+            if len(el) > 1:
+                arg = el[1:]
+                if ins in self.cmd_set:
+                    try:
+                        self.cmd_set[ins][0](*arg)
+                    except Exception as ex:
+                        color_print('错误的指令格式', EColor.ERROR)
+            elif ins in self.cmd_set:
+                try:
+                    self.cmd_set[ins][0]()
+                except Exception as ex:
+                    color_print('错误的指令格式', EColor.ERROR)
         self.next_stage.enter()
 
     def print_help(self):

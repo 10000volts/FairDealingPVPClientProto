@@ -7,7 +7,7 @@ import os
 server = 'http://47.113.95.132:8082/'
 session_id = None
 
-DEBUG = int(os.getenv('DEBUG', 1))
+DEBUG = int(os.getenv('DEBUG', 0))
 
 
 def __send_message(path, data=None, method='GET', request_retry_times=0,

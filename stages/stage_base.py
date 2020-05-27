@@ -1,6 +1,7 @@
 from custom.e_color import EColor
 from utils.color import color, color_print
 from utils.common import logout
+import readline
 import sys
 
 

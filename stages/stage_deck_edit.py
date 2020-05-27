@@ -1,6 +1,6 @@
 from stages.stage_base import StageBase
 from utils.color import color, color_print, EColor
-from utils.common import list_cards, card_detail, random_deck
+from utils.common import list_cards, card_detail, random_deck, DEBUG
 from utils.constants import ECardType, card_type,\
     employee_type, strategy_type
 import json
@@ -50,19 +50,24 @@ class StageDeckEdit(StageBase):
             col = EColor.GOOD_CARD
         elif c['rank'] == 2:
             col = EColor.TRUMP_CARD
-        color_print('{}'.format(color(c['name'], col)))
+        if DEBUG:
+            color_print('{} {}'.format(color(c['name'], col), c['card_id']))
+        else:
+            color_print('{}'.format(color(c['name'], col)))
         subtype = ''
         if c['type'] == ECardType.EMPLOYEE.value:
             subtype = employee_type[int(c['subtype'])]
         elif c['type'] == ECardType.STRATEGY.value:
             subtype = strategy_type[int(c['subtype'])]
         color_print('{} {}'.format(card_type[int(c['type'])], subtype))
-
+        ss = ''
+        if len(c['series']) > 0:
+            ss = str(c['series'])
         if c['type'] == ECardType.EMPLOYEE.value:
-            color_print('ATK {} DEF {}'.format(color(c['atk_eff'], EColor.ATK),
-                                               color(c['def_hp'], EColor.DEF)))
+            color_print('ATK {} DEF {} {}'.format(color(c['atk_eff'], EColor.ATK),
+                                               color(c['def_hp'], EColor.DEF), ss))
         elif c['type'] == ECardType.STRATEGY.value:
-            color_print('EFF {}'.format(color(c['atk_eff'], EColor.DEF)))
+            color_print('EFF {} {}'.format(color(c['atk_eff'], EColor.DEF), ss))
         color_print('效果: {}'.format(c['effect']))
 
     def random_deck(self):

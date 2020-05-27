@@ -4,7 +4,7 @@ import getpass
 from hashlib import md5, sha256
 
 from utils.common import login
-from stages.stage_main import StageMain
+from stages.stage_deck_edit import StageDeckEdit
 
 
 class StageLogin:
@@ -18,5 +18,5 @@ class StageLogin:
                 break
             else:
                 color_print('用户名或密码错误orz', EColor.ERROR)
-        stm = StageMain()
+        stm = StageDeckEdit()
         stm.enter()

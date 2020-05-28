@@ -7,6 +7,12 @@ class ECardType(Enum):
     STRATEGY = 3
 
 
+class ECardRank(Enum):
+    COMMON = 0
+    GOOD = 1
+    TRUMP = 2
+
+
 card_type = ['', '领袖', '雇员', '策略']
 employee_type = ['', '常规', '契约', '继承', '合约']
 strategy_type = ['', '常规', '持续', '单人', '反制', '反制|持续', '立即',

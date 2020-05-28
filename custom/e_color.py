@@ -21,7 +21,7 @@ class EColor(Enum):
     # cg
     GOOD_CARD = 36
     # cc
-    COMMON_CARD = 0
+    COMMON_CARD = 37
 
     # atk
     ATK = 31

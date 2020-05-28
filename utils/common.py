@@ -79,11 +79,12 @@ def logout():
 
 
 def list_cards():
-    return __send_message(path='cards/list/')
+    return json.loads(__send_message(path='cards/list/').text)
 
 
 def card_detail(card_name):
-    return __send_message(path='cards/dtl/{}/'.format(card_name))
+    return json.loads(__send_message(path='cards/dtl/{}/'.format(card_name)).text)
+
 
 def random_deck():
-    return __send_message(path='cards/sealed-deck/?pid=1&pack_count=1')
+    return json.loads(__send_message(path='player/rdk/').text)

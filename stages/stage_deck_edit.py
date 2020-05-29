@@ -43,8 +43,12 @@ class StageDeckEdit(StageBase):
                 col = EColor.TRUMP_CARD
             color_print('{}({})'.format(color(c['name'], col), c['limit']))
 
-    def detail(self, card_name):
+    def detail(self, *args):
         col = EColor.DEFAULT_COLOR
+        card_name = ''
+        for s in args:
+            card_name += s + ' '
+        card_name = card_name[0:-1]
         c = card_detail(card_name)
         if c['rank'] == ECardRank.COMMON.value:
             col = EColor.COMMON_CARD
@@ -73,23 +77,18 @@ class StageDeckEdit(StageBase):
         color_print('效果: {}'.format(c['effect']))
 
     def random_deck(self):
-        deck = None
-        try:
-            deck = random_deck()
-        except Exception as ex:
-            color_print('您今日已经获取过1次随机卡组了orz', EColor.ERROR)
-            return
+        deck = random_deck()
         col = EColor.EMPHASIS
-        for cn in deck.keys():
-            rk = deck[cn][1]
+        for cid in deck.keys():
+            rk = deck[cid][1]
             if rk == ECardRank.COMMON.value:
                 col = EColor.COMMON_CARD
             elif rk == ECardRank.GOOD.value:
                 col = EColor.GOOD_CARD
             elif rk == ECardRank.TRUMP.value:
                 col = EColor.TRUMP_CARD
-            color_print('{}: {}'.format(color(cn, col),
-                                        deck[cn][0]))
+            color_print('{}: {}'.format(color(deck[cid][2], col),
+                                        deck[cid][0]))
 
 
     def new(self, deck_name):

@@ -14,7 +14,7 @@ class StageBase:
 
     def enter(self):
         while self.next_stage is None:
-            cmd = input("请输入指令。(键入-h获得帮助) ")
+            cmd = input(">>> ")
             el = cmd.split(' ')
             ins = el[0]
             if len(el) > 1:

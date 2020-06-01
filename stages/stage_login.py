@@ -10,7 +10,7 @@ from stages.stage_deck_edit import StageDeckEdit
 class StageLogin:
     @staticmethod
     def enter():
-        color_print('欢迎使用公平交易PVP原型版！操作小提示：'
+        color_print('欢迎使用公平交易PVP原型版！操作小提示：\n'
                     '1、输入-h指令以获得帮助。')  # '2、在输入卡名时，用\"-\"替换掉卡名中的空格。')
         while True:
             user_name = input("请输入用户名：")

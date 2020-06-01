@@ -1,8 +1,9 @@
-from custom.e_color import EColor
-from utils.color import color, color_print
-from utils.common import logout
 import readline
 import sys
+
+from custom.e_color import EColor
+from utils.color import color, color_print
+from utils.common import logout, DEBUG
 
 
 class StageBase:
@@ -20,15 +21,21 @@ class StageBase:
             if len(el) > 1:
                 arg = el[1:]
                 if ins in self.cmd_set:
-                    try:
+                    if not DEBUG:
+                        try:
+                            self.cmd_set[ins][0](*arg)
+                        except Exception as ex:
+                            color_print('错误的指令格式', EColor.ERROR)
+                    else:
                         self.cmd_set[ins][0](*arg)
+            elif ins in self.cmd_set:
+                if not DEBUG:
+                    try:
+                        self.cmd_set[ins][0]()
                     except Exception as ex:
                         color_print('错误的指令格式', EColor.ERROR)
-            elif ins in self.cmd_set:
-                try:
+                else:
                     self.cmd_set[ins][0]()
-                except Exception as ex:
-                    color_print('错误的指令格式', EColor.ERROR)
         self.next_stage.enter()
 
     def print_help(self):

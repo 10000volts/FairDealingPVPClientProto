@@ -65,26 +65,40 @@ def login(user_name, pwd):
     :return:
     """
     res = __send_message(path='player/login/',
-                      data={'user_name': user_name, 'pwd': pwd},
-                      method='POST')
+                         data={'user_name': user_name, 'pwd': pwd},
+                         method='POST')
     if res is not None:
         global session_id
         session_id = res.cookies['sessionid']
         return True
     return False
-
-
 def logout():
     __send_message(path='player/logout/')
 
-
 def list_cards():
     return json.loads(__send_message(path='cards/list/').text)
-
-
 def card_detail(card_name):
     return json.loads(__send_message(path='cards/dtl/{}/'.format(card_name)).text)
 
-
+def new_deck(deck_name):
+    return __send_message(path='player/newd/?name={}'.format(deck_name)).text
+def remove_deck(did):
+    return __send_message(path='player/rmd/?did={}'.format(did))
 def random_deck():
     return json.loads(__send_message(path='player/rdk/').text)
+def open_deck(deck_name):
+    return json.loads(__send_message(path='player/opd/?name={}'.format(deck_name)).text)
+def rdk_add_card(cid):
+    return deck_add_card(cid, None, 0)
+def deck_add_card(cid, did, side):
+    if did is None:
+        did = -1
+    return json.loads(__send_message(
+        path='player/ad/?cid={}&did={}&side={}'.format(cid, did, int(side))).text)
+def rdk_remove_card(cid):
+    return deck_remove_card(cid, None, 0)
+def deck_remove_card(cid, did, side):
+    if did is None:
+        did = -1
+    return json.loads(__send_message(
+        path='player/rd/?cid={}&did={}&side={}'.format(cid, did, int(side))).text)

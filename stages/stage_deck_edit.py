@@ -247,7 +247,7 @@ class StageDeckEdit(StageBase):
                 d = e[0](e[1], self.deck_index, e[2])
         elif self.rdk_editing:
             for e in self.edit_stack:
-                d = e[0](e[1])
+                d = e[0](e[1], None, 0)
         else:
             color_print('当前没有在编辑任何卡组orz', EColor.ERROR)
             return

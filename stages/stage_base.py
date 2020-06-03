@@ -28,6 +28,8 @@ class StageBase:
                             color_print('错误的指令格式', EColor.ERROR)
                     else:
                         self.cmd_set[ins][0](*arg)
+                else:
+                    self.default_cmd()
             elif ins in self.cmd_set:
                 if not DEBUG:
                     try:
@@ -36,7 +38,12 @@ class StageBase:
                         color_print('错误的指令格式', EColor.ERROR)
                 else:
                     self.cmd_set[ins][0]()
+            else:
+                self.default_cmd()
         self.next_stage.enter()
+
+    def default_cmd(self, *args):
+        color_print('指令不存在。', EColor.ERROR)
 
     def print_help(self):
         for cmd in self.cmd_set.keys():

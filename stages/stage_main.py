@@ -10,5 +10,4 @@ class StageMain(StageBase):
         super().enter()
 
     def call_deck_editor(self):
-
         self.next_stage = StageDeckEdit()

@@ -16,7 +16,7 @@ class StageBase:
     def enter(self):
         while self.next_stage is None:
             cmd = input(">>> ")
-            el = cmd.split(' ')
+            el = cmd.strip().split(' ')
             ins = el[0]
             if len(el) > 1:
                 arg = el[1:]
@@ -39,10 +39,10 @@ class StageBase:
                 else:
                     self.cmd_set[ins][0]()
             else:
-                self.default_cmd()
+                self.default_cmd(cmd)
         self.next_stage.enter()
 
-    def default_cmd(self, *args):
+    def default_cmd(self, cmd):
         color_print('指令不存在。', EColor.ERROR)
 
     def print_help(self):

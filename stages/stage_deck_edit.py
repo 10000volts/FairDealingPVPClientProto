@@ -1,11 +1,14 @@
 from stages.stage_base import StageBase
+from stages.stage_pvp import StagePVP
 from utils.color import color, color_print, EColor
 from utils.common import list_cards, card_detail, random_deck,\
     rdk_add_card, rdk_remove_card, new_deck,\
     deck_add_card, deck_remove_card, remove_deck, open_deck,\
+    pvp,\
     DEBUG
 from utils.constants import ECardType, card_type,\
     employee_type, strategy_type, ECardRank
+
 import json
 
 
@@ -78,10 +81,17 @@ class StageDeckEdit(StageBase):
         else:
             color_print('{}'.format(color(c['name'], col)))
         subtype = ''
+        sts = list()
         if c['type'] == ECardType.EMPLOYEE.value:
-            subtype = employee_type[int(c['subtype'])]
+            for st in employee_type.keys():
+                if st & int(c['subtype']):
+                    sts.append(employee_type[st])
+            subtype = '|'.join(sts)
         elif c['type'] == ECardType.STRATEGY.value:
-            subtype = strategy_type[int(c['subtype'])]
+            for st in strategy_type.keys():
+                if st & int(c['subtype']):
+                    sts.append(strategy_type[st])
+            subtype = '|'.join(sts)
         color_print('{} {}'.format(card_type[int(c['type'])], subtype))
         ss = ''
         if len(c['series']) > 0:
@@ -258,7 +268,8 @@ class StageDeckEdit(StageBase):
             self.__show_deck(self.temp_deck)
 
     def play(self):
-        pass
+        pvp(self.deck_index, -1)
+        self.next_stage = StagePVP()
 
     def play_with_secret_code(self, code):
         pass

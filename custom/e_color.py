@@ -11,6 +11,8 @@ class EColor(Enum):
     DEFAULT_COLOR = 34
     # em
     PLAYER_NAME = 33
+    # op
+    OP_PLAYER = 31
     # emn
     EMPHASIS = 33
     # err

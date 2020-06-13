@@ -4,12 +4,12 @@ import getpass
 from hashlib import md5, sha256
 
 from utils.common import login
-from stages.stage_deck_edit import StageDeckEdit
 
 
 class StageLogin:
     @staticmethod
     def enter():
+        from stages.stage_deck_edit import StageDeckEdit
         color_print('欢迎使用公平交易PVP原型版！操作小提示：\n'
                     '1、输入-h指令以获得帮助。')  # '2、在输入卡名时，用\"-\"替换掉卡名中的空格。')
         while True:

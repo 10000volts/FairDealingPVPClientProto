@@ -1,9 +1,10 @@
 from stages.stage_base import StageBase
-from stages.stage_deck_edit import StageDeckEdit
 from utils.color import color, color_print, EColor
 from utils.common import get_commands, chat
+from utils.common import query_interval
 
-from multiprocessing import Process
+from threading import Thread
+from time import sleep
 
 
 class StageGame(StageBase):
@@ -11,8 +12,9 @@ class StageGame(StageBase):
     游戏页面。
     """
     def enter(self):
-        p = Process(target=self.__listen, args=())
-        p.start()
+        t = Thread(target=self.__listen)
+        t.start()
+        color_print('进入对局！', EColor.EMPHASIS)
         super().enter()
 
     def default_cmd(self, cmd):
@@ -24,7 +26,9 @@ class StageGame(StageBase):
             if cs is not None:
                 for c in cs:
                     self.carry_out(c)
+            sleep(query_interval)
 
     def carry_out(self, cmd):
+        from stages.stage_deck_edit import StageDeckEdit
         if cmd['op'] == 'chat':
-            color_print(cmd['args'] ,EColor.OP_PLAYER)
+            self.interrupt_input(cmd['args'] ,EColor.OP_PLAYER)

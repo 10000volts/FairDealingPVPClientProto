@@ -29,7 +29,7 @@ _color_ind = {'<dc--|': EColor.DEFAULT_COLOR.value,
               }
 
 
-def color_print(text: str, c=EColor.DEFAULT_COLOR, single=False):
+def color_print(text: str, c=EColor.DEFAULT_COLOR, cover=False):
     """
     上色并输出。最外层将自动涂上一层指定的颜色。
     :param text:
@@ -62,8 +62,8 @@ def color_print(text: str, c=EColor.DEFAULT_COLOR, single=False):
             res_text += text[i]
         i += 1
 
-    if single:
-        print(res_text, end='\r')
+    if cover:
+        print('\r' + res_text)
     else:
         print(res_text)
 

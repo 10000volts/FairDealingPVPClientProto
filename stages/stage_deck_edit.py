@@ -1,5 +1,4 @@
 from stages.stage_base import StageBase
-from stages.stage_pvp import StagePVP
 from utils.color import color, color_print, EColor
 from utils.common import list_cards, card_detail, random_deck,\
     rdk_add_card, rdk_remove_card, new_deck,\
@@ -13,8 +12,8 @@ import json
 
 
 class StageDeckEdit(StageBase):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, st: list = None):
+        super().__init__(st)
 
         self.deck_index = None
         self.rdk_editing = False
@@ -268,8 +267,11 @@ class StageDeckEdit(StageBase):
             self.__show_deck(self.temp_deck)
 
     def play(self):
-        pvp(self.deck_index, -1)
-        self.next_stage = StagePVP()
+        from stages.stage_pvp import StagePVP
+        if pvp(self.deck_index, -1):
+            self.next_stage = StagePVP()
+        else:
+            color_print('匹配失败orz', EColor.ERROR)
 
     def play_with_secret_code(self, code):
         pass

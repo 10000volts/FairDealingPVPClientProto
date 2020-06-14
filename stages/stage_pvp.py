@@ -15,10 +15,10 @@ class StagePVP(StageBase):
     匹配页面。
     """
     def enter(self):
-        color_print('正在寻找合适的对手...', EColor.EMPHASIS)
+        color_print('正在寻找合适的对手...使用exit退出匹配', EColor.EMPHASIS)
         self.enter_status('匹配中')
         self.cmd_set['r'] = (self.refresh, '刷新。')
-        self.cmd_set['exit'] = (self.exit, '退出匹配并终止游戏。')
+        self.cmd_set['exit'] = (self.exit, '退出匹配并返回卡组编辑页面。')
 
         t = Thread(target=self.__wait)
         t.start()
@@ -30,7 +30,9 @@ class StagePVP(StageBase):
 
     def __wait(self):
         from stages.stage_game import StageGame
+        from stages.stage_deck_edit import StageDeckEdit
         f = True
+        endm = False
         while f:
             cs = get_commands()
             if cs is not None:
@@ -43,6 +45,6 @@ class StagePVP(StageBase):
         self.interrupt_input('对局已找到，请使用r刷新并进入对局！', EColor.EMPHASIS)
 
     def exit(self):
+        from stages.stage_deck_edit import StageDeckEdit
         exit_pvp()
-        logout()
-        sys.exit()
+        self.next_stage = StageDeckEdit(self.status)

@@ -14,7 +14,7 @@ class StageGame(StageBase):
     def enter(self):
         t = Thread(target=self.__listen)
         t.start()
-        color_print('进入对局！', EColor.EMPHASIS)
+        color_print('进入对局！输入非指令可以自由发言！', EColor.EMPHASIS)
         super().enter()
 
     def default_cmd(self, cmd):
@@ -30,5 +30,8 @@ class StageGame(StageBase):
 
     def carry_out(self, cmd):
         from stages.stage_deck_edit import StageDeckEdit
-        if cmd['op'] == 'chat':
+        if cmd['op'] == 'endm_force':
+            color_print('服务器故障，对局被非正常关闭。输入任意内容回到卡组编辑页面。', EColor.ERROR)
+            self.next_stage = StageDeckEdit(self.status)
+        elif cmd['op'] == 'chat':
             self.interrupt_input(cmd['args'] ,EColor.OP_PLAYER)

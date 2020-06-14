@@ -10,4 +10,4 @@ class StageMain(StageBase):
 
     def call_deck_editor(self):
         from stages.stage_deck_edit import StageDeckEdit
-        self.next_stage = StageDeckEdit()
+        self.next_stage = StageDeckEdit(self.status)

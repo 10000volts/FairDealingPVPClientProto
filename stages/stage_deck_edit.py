@@ -269,7 +269,7 @@ class StageDeckEdit(StageBase):
     def play(self):
         from stages.stage_pvp import StagePVP
         if pvp(self.deck_index, -1):
-            self.next_stage = StagePVP()
+            self.next_stage = StagePVP(self.status)
         else:
             color_print('匹配失败orz', EColor.ERROR)
 

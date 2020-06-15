@@ -9,11 +9,15 @@ from threading import Thread
 
 
 class StagePVP(StageBase):
-    t: Thread = None
-
     """
     匹配页面。
     """
+    def __init__(self, did, code, status: list = None):
+        super().__init__(status)
+        self.did = did
+        self.code = code
+        self.matching = True
+
     def enter(self):
         color_print('正在寻找合适的对手...使用exit退出匹配', EColor.EMPHASIS)
         self.enter_status('匹配中')
@@ -32,8 +36,7 @@ class StagePVP(StageBase):
         from stages.stage_game import StageGame
         from stages.stage_deck_edit import StageDeckEdit
         f = True
-        endm = False
-        while f:
+        while f and self.matching:
             cs = get_commands()
             if cs is not None:
                 for c in cs:
@@ -41,10 +44,12 @@ class StagePVP(StageBase):
                         f = False
             sleep(query_interval)
         self.exit_status('匹配中')
-        self.next_stage = StageGame(self.status)
-        self.interrupt_input('对局已找到，请使用r刷新并进入对局！', EColor.EMPHASIS)
+        if self.matching:
+            self.next_stage = StageGame(self.status)
+            self.interrupt_input('对局已找到，请使用r刷新并进入对局！', EColor.EMPHASIS)
 
     def exit(self):
         from stages.stage_deck_edit import StageDeckEdit
-        exit_pvp()
+        self.matching = False
+        exit_pvp(self.did, self.code)
         self.next_stage = StageDeckEdit(self.status)

@@ -11,6 +11,10 @@ class StageGame(StageBase):
     """
     游戏页面。
     """
+    def __init__(self, st):
+        super().__init__(st)
+        self.running = True
+
     def enter(self):
         t = Thread(target=self.__listen)
         t.start()
@@ -21,7 +25,7 @@ class StageGame(StageBase):
         chat(cmd)
 
     def __listen(self):
-        while True:
+        while self.running:
             cs = get_commands()
             if cs is not None:
                 for c in cs:
@@ -31,7 +35,9 @@ class StageGame(StageBase):
     def carry_out(self, cmd):
         from stages.stage_deck_edit import StageDeckEdit
         if cmd['op'] == 'endm_force':
-            color_print('服务器故障，对局被非正常关闭。输入任意内容回到卡组编辑页面。', EColor.ERROR)
+            self.running = False
+            self.interrupt_input('服务器故障，对局被非正常关闭。输入任意内容回到卡组编辑页面。',
+                                 EColor.ERROR)
             self.next_stage = StageDeckEdit(self.status)
         elif cmd['op'] == 'chat':
             self.interrupt_input(cmd['args'] ,EColor.OP_PLAYER)

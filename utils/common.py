@@ -110,8 +110,10 @@ def pvp(did, code):
     if did is None:
         did = -1
     return True if __send_message(path='player/pvp/?did={}&code={}'.format(did, code)) else False
-def exit_pvp():
-    pass
+def exit_pvp(did, code):
+    if did is None:
+        did = -1
+    __send_message(path='player/exit_pvp/?did={}&code={}'.format(did, code))
 
 def chat(test):
     __send_message(path='player/chat/?text={}'.format(test))

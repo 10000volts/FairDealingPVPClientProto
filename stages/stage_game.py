@@ -39,5 +39,12 @@ class StageGame(StageBase):
             self.interrupt_input('服务器故障，对局被非正常关闭。输入任意内容回到卡组编辑页面。',
                                  EColor.ERROR)
             self.next_stage = StageDeckEdit(self.status)
+        elif cmd['op'] == 'endm':
+            self.running = False
+            res = '取得了胜利！' if int(cmd['args']['res']) else '遗憾地败北orz'
+            self.interrupt_input('您在与{}的交锋中{}\n'
+                                 '输入任意内容回到卡组编辑页面。'.format(cmd['args']['op'], res),
+                                 EColor.ERROR)
+            self.next_stage = StageDeckEdit(self.status)
         elif cmd['op'] == 'chat':
             self.interrupt_input(cmd['args'] ,EColor.OP_PLAYER)

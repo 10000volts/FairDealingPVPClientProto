@@ -6,7 +6,7 @@ from utils.common import list_cards, card_detail, random_deck,\
     pvp,\
     DEBUG
 from utils.constants import ECardType, card_type,\
-    employee_type, strategy_type, ECardRank
+    employee_type, strategy_type, ECardRank, error_hints
 
 import json
 
@@ -268,7 +268,8 @@ class StageDeckEdit(StageBase):
 
     def play(self):
         from stages.stage_pvp import StagePVP
-        if pvp(self.deck_index, -1):
+        res = pvp(self.deck_index, -1)
+        if res:
             self.next_stage = StagePVP(self.deck_index, -1, self.status)
         else:
             color_print('匹配失败orz', EColor.ERROR)

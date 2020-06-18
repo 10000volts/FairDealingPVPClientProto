@@ -29,3 +29,10 @@ class EColor(Enum):
     ATK = 31
     # def
     DEF = 36
+
+    # gt
+    GREATER_THAN = 35
+    # equ
+    EQUAL_TO = 37
+    # lt
+    LESS_THAN = 32

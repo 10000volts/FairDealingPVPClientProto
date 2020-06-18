@@ -4,10 +4,10 @@ import traceback
 from time import sleep
 import os
 
-server = 'http://47.113.95.132:8082/'
-# server = 'http://127.0.0.1:8000'
+# server = 'http://47.113.95.132:8082/'
+server = 'http://127.0.0.1:8000'
 # 轮询间隔(s)
-query_interval = 0.1
+query_interval = 0.05
 
 session_id = None
 
@@ -47,6 +47,7 @@ def __send_message(path, data=None, method='GET', request_retry_times=0,
             if check_status_code and res.status_code >= 400:
                 if DEBUG:
                     print("%d failed %s" % (res.status_code, res.text))
+                    raise Exception("%s %s request failed" % (url, method))
                 return None
             # 返回
             return res
@@ -123,3 +124,5 @@ def get_commands():
     if c == '':
         return None
     return json.loads(c)
+def answer(ans):
+    __send_message(path='player/ans/?ans={}'.format(ans))

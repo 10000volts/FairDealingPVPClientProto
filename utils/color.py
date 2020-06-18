@@ -12,6 +12,10 @@ _color = {EColor.DEFAULT_COLOR.value: '<dc--|{}>',
 
           EColor.ATK.value: '<atk-|{}>',
           EColor.DEF.value: '<def-|{}>',
+
+          EColor.GREATER_THAN.value: '<gt0-|{}>',
+          EColor.EQUAL_TO.value: '<equ-|{}>',
+          EColor.LESS_THAN.value: '<lt0-|{}>',
           }
 
 _color_ind = {'<dc--|': EColor.DEFAULT_COLOR.value,
@@ -26,6 +30,10 @@ _color_ind = {'<dc--|': EColor.DEFAULT_COLOR.value,
 
               '<atk-|': EColor.ATK.value,
               '<def-|': EColor.DEF.value,
+
+              '<gt0-|': EColor.GREATER_THAN.value,
+              '<equ-|': EColor.EQUAL_TO.value,
+              '<lt0-|': EColor.LESS_THAN.value,
               }
 
 

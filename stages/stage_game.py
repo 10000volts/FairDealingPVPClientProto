@@ -1,11 +1,12 @@
 from stages.stage_base import StageBase
 from utils.color import color, color_print, EColor
 from utils.common import get_commands, chat, query_interval, answer
-from utils.constants import game_phase, time_point, card_rank
+from utils.constants import game_phase, time_point, card_rank, location, ECardRank
 from custom.msg_ignore import ignore_list
 
 from threading import Thread
 from time import sleep
+import json
 
 
 def _get_p(p):
@@ -19,6 +20,14 @@ def _card_detail(c: dict):
     :param c:
     :return:
     """
+    col = EColor.DEFAULT_COLOR
+    if ECardRank(c['rank']) == ECardRank.COMMON:
+        col = EColor.COMMON_CARD
+    elif ECardRank(c['rank']) == ECardRank.GOOD:
+        col = EColor.GOOD_CARD
+    else:
+        col = EColor.TRUMP_CARD
+
     be = ''
     tk = ''
     a = c['bsc_atk'] + c['buff_atk'] + c['halo_atk']
@@ -45,8 +54,8 @@ def _card_detail(c: dict):
     return color('{name}{buff_eff}\n'
                  'gcid: {gcid}{tk}\n'
                  'ATK/{atk} DEF/{def_}\n'
-                 '{loc}'.format(name=c['name'], buff_eff=be, gcid=c['gcid'],
-                          tk=tk, atk=a, def_=d, loc=c['location']), EColor.DEFAULT_COLOR)
+                 '{loc}'.format(name=color(c['name'], col), buff_eff=be, gcid=c['gcid'],
+                          tk=tk, atk=a, def_=d, loc=location[c['location']]), EColor.DEFAULT_COLOR)
 
 
 class StageGame(StageBase):
@@ -56,6 +65,10 @@ class StageGame(StageBase):
     def __init__(self, st):
         super().__init__(st)
         self.running = True
+        # {gcid: {...}, ...}
+        self.cards = dict()
+        # game_phase
+        self.phase = 0
 
     def enter(self):
         self.cmd_set['ans'] = (self.answer, '响应服务器的请求。')
@@ -64,10 +77,12 @@ class StageGame(StageBase):
         super().enter()
 
     def default_cmd(self, cmd):
-        chat(cmd)
+        if self.running:
+            chat(cmd)
 
     def answer(self, ans):
-        answer(ans)
+        if self.running:
+            answer(ans)
 
     def __listen(self):
         while self.running:
@@ -99,29 +114,40 @@ class StageGame(StageBase):
         elif cmd['op'] == 'startg':
             msg = '游戏开始！'
             col = EColor.EMPHASIS
-        elif cmd['op'] == 'eng':
+        elif cmd['op'] == 'endg':
             msg = '单局游戏结束orz'
             col = EColor.EMPHASIS
         elif cmd['op'] == 'ent_ph':
             msg = '进入阶段: {}'.format(game_phase[cmd['args'][0]])
         elif cmd['op'] == 'sp_decided':
             msg = '{}获得了先手！'.format(_get_p(cmd['sd']))
+        elif cmd['op'] == 'upd_crd':
+            if cmd['args'][1] is None:
+                self.cards[cmd['args'][0]] = None
+            else:
+                self.cards[cmd['args'][0]] = json.loads(cmd['args'][1])
+        elif cmd['op'] == 'rm_crd':
+            self.cards.pop(cmd['args'][0])
         elif cmd['op'] == 'req_shw_crd':
             msg = '请展示1张手牌中的{}卡。'.format(card_rank[cmd['args'][0]])
         elif cmd['op'] == 'req_chs_tgt_f' or cmd['op'] == 'req_chs_tgt':
-            msg = '请选择{}个目标，输入ans 在卡名前方显示的序号: \n'.format(cmd['args'][1])
+            msg = '请选择{}个目标，输入\'ans 在卡名前方显示的序号\': \n'.format(cmd['args'][1])
             i = 0
-            for c in cmd['args'][0]:
+            for gcid in cmd['args'][0]:
                 msg += '[{}]'.format(color(str(i), EColor.EMPHASIS)) +\
-                       _card_detail(c) + '\n'
+                       _card_detail(self.cards[gcid]) + '\n'
                 i += 1
-        elif cmd['op'] == 'anu_tgt':
-            msg = '{}选择了{}。'.format(_get_p(cmd['sd']), cmd['args'][0]['name'])
+        elif cmd['op'] == 'shw_crd':
+            msg = '{}展示了 {} 。'.format(_get_p(cmd['sd']),
+                                    self.cards[cmd['args'][0]]['name'])
         elif cmd['op'] == 'ent_tp':
             msg = '进入时点: {}'.format(time_point[cmd['args'][0]])
+        elif cmd['op'] == 'in_err':
+            msg = '错误或无效输入orz'
+            col = EColor.ERROR
         elif cmd['op'] == 'chat':
             msg = cmd['args']
             col = EColor.OP_PLAYER
 
-        if cmd['op'] not in ignore_list:
+        if cmd['op'] not in ignore_list and msg != '':
             self.interrupt_input(msg, col)

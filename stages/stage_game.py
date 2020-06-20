@@ -20,14 +20,6 @@ def _card_detail(c: dict):
     :param c:
     :return:
     """
-    col = EColor.DEFAULT_COLOR
-    if ECardRank(c['rank']) == ECardRank.COMMON:
-        col = EColor.COMMON_CARD
-    elif ECardRank(c['rank']) == ECardRank.GOOD:
-        col = EColor.GOOD_CARD
-    else:
-        col = EColor.TRUMP_CARD
-
     be = ''
     tk = ''
     a = c['bsc_atk'] + c['buff_atk'] + c['halo_atk']
@@ -54,7 +46,7 @@ def _card_detail(c: dict):
     return color('{name}{buff_eff}\n'
                  'gcid: {gcid}{tk}\n'
                  'ATK/{atk} DEF/{def_}\n'
-                 '{loc}'.format(name=color(c['name'], col), buff_eff=be, gcid=c['gcid'],
+                 '{loc}'.format(name=c['name'], buff_eff=be, gcid=c['gcid'],
                           tk=tk, atk=a, def_=d, loc=location[c['location']]), EColor.DEFAULT_COLOR)
 
 
@@ -105,7 +97,7 @@ class StageGame(StageBase):
             self.running = False
             res = '取得了胜利！' if int(cmd['args'][0]) else '遗憾地败北orz'
             msg = '您在与{}的交锋中{}\n'\
-                  '输入任意内容回到卡组编辑页面。'.format(cmd['args'][1], res)
+                  '输入任意内容回到卡组编辑页面。'.format(color(cmd['args'][1], EColor.OP_PLAYER), res)
             col = EColor.EMPHASIS
             self.next_stage = StageDeckEdit(self.status)
         elif cmd['op'] == 'startm':
@@ -115,7 +107,7 @@ class StageGame(StageBase):
             msg = '游戏开始！'
             col = EColor.EMPHASIS
         elif cmd['op'] == 'endg':
-            msg = '单局游戏结束orz'
+            msg = '单局游戏结束，{}在单局中取胜。'.format(_get_p(cmd['sd']))
             col = EColor.EMPHASIS
         elif cmd['op'] == 'ent_ph':
             msg = '进入阶段: {}'.format(game_phase[cmd['args'][0]])
@@ -126,6 +118,15 @@ class StageGame(StageBase):
                 self.cards[cmd['args'][0]] = None
             else:
                 self.cards[cmd['args'][0]] = json.loads(cmd['args'][1])
+                col = EColor.DEFAULT_COLOR
+                c = self.cards[cmd['args'][0]]
+                if ECardRank(c['rank']) == ECardRank.COMMON:
+                    col = EColor.COMMON_CARD
+                elif ECardRank(c['rank']) == ECardRank.GOOD:
+                    col = EColor.GOOD_CARD
+                elif ECardRank(c['rank']) == ECardRank.TRUMP:
+                    col = EColor.TRUMP_CARD
+                self.cards[cmd['args'][0]]['name'] = color(c['name'], col)
         elif cmd['op'] == 'rm_crd':
             self.cards.pop(cmd['args'][0])
         elif cmd['op'] == 'req_shw_crd':
@@ -138,7 +139,7 @@ class StageGame(StageBase):
                        _card_detail(self.cards[gcid]) + '\n'
                 i += 1
         elif cmd['op'] == 'shw_crd':
-            msg = '{}展示了 {} 。'.format(_get_p(cmd['sd']),
+            msg = '{}展示了{}。'.format(_get_p(cmd['sd']),
                                     self.cards[cmd['args'][0]]['name'])
         elif cmd['op'] == 'ent_tp':
             msg = '进入时点: {}'.format(time_point[cmd['args'][0]])

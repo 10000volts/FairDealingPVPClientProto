@@ -4,10 +4,10 @@ import traceback
 from time import sleep
 import os
 
-# server = 'http://47.113.95.132:8082/'
-server = 'http://127.0.0.1:8000'
+server = 'http://47.113.95.132:8082/'
+# server = 'http://127.0.0.1:8000'
 # 轮询间隔(s)
-query_interval = 0.05
+query_interval = 0.95
 
 session_id = None
 
@@ -123,6 +123,7 @@ def get_commands():
     c = __send_message(path='player/get_cmd/').text
     if c == '':
         return None
+    print(c)
     return json.loads(c)
 def answer(ans):
     __send_message(path='player/ans/?ans={}'.format(ans))

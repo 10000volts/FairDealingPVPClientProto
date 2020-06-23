@@ -4,7 +4,7 @@ from utils.common import get_commands, logout, exit_pvp
 from utils.common import query_interval
 
 from time import sleep
-import sys
+import json
 from threading import Thread
 
 
@@ -31,11 +31,21 @@ class StagePVP(StageBase):
 
     def refresh(self):
         pass
+        # from stages.stage_game import StageGame
+        # cs = get_commands()
+        # if cs is not None:
+        #     for c in cs:
+        #         if c['op'] == 'pvp_ok':
+        #             self.exit_status('匹配中')
+        #             if self.matching:
+        #                 self.next_stage = StageGame(self.status, cs)
+        #                 self.interrupt_input('对局已找到，请使用r刷新并进入对局！', EColor.EMPHASIS)
+        #                 self.matching = False
 
     def __wait(self):
         from stages.stage_game import StageGame
-        from stages.stage_deck_edit import StageDeckEdit
         f = True
+        cs = list()
         while f and self.matching:
             cs = get_commands()
             if cs is not None:
@@ -45,7 +55,7 @@ class StagePVP(StageBase):
             sleep(query_interval)
         self.exit_status('匹配中')
         if self.matching:
-            self.next_stage = StageGame(self.status)
+            self.next_stage = StageGame(self.status, cs)
             self.interrupt_input('对局已找到，请使用r刷新并进入对局！', EColor.EMPHASIS)
 
     def exit(self):

@@ -54,16 +54,21 @@ class StageGame(StageBase):
     """
     游戏页面。
     """
-    def __init__(self, st):
+    def __init__(self, st, cmd: list = None):
         super().__init__(st)
         self.running = True
         # {gcid: {...}, ...}
         self.cards = dict()
         # game_phase
         self.phase = 0
+        self.tmp_cmd = cmd
 
     def enter(self):
         self.cmd_set['ans'] = (self.answer, '响应服务器的请求。')
+        # self.cmd_set['r'] = (self.refresh, '刷新。')
+        if self.tmp_cmd is not None:
+            for c in self.tmp_cmd:
+                self.carry_out(c)
         t = Thread(target=self.__listen)
         t.start()
         super().enter()
@@ -71,6 +76,12 @@ class StageGame(StageBase):
     def default_cmd(self, cmd):
         if self.running:
             chat(cmd)
+
+    def refresh(self):
+        cs = get_commands()
+        if cs is not None:
+            for c in cs:
+                self.carry_out(c)
 
     def answer(self, ans):
         if self.running:
@@ -117,7 +128,7 @@ class StageGame(StageBase):
             if cmd['args'][1] is None:
                 self.cards[cmd['args'][0]] = None
             else:
-                self.cards[cmd['args'][0]] = json.loads(cmd['args'][1])
+                self.cards[cmd['args'][0]] = cmd['args'][1]
                 col = EColor.DEFAULT_COLOR
                 c = self.cards[cmd['args'][0]]
                 if ECardRank(c['rank']) == ECardRank.COMMON:

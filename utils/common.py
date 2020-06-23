@@ -4,10 +4,10 @@ import traceback
 from time import sleep
 import os
 
-server = 'http://47.113.95.132:8082/'
-# server = 'http://127.0.0.1:8000'
+# server = 'http://47.113.95.132:8082/'
+server = 'http://127.0.0.1:8000'
 # 轮询间隔(s)
-query_interval = 0.95
+query_interval = 0.15
 
 session_id = None
 
@@ -110,7 +110,7 @@ def deck_remove_card(cid, did, side):
 def pvp(did, code):
     if did is None:
         did = -1
-    return True if __send_message(path='player/pvp/?did={}&code={}'.format(did, code)) else False
+    return __send_message(path='player/pvp/?did={}&code={}'.format(did, code)).text
 def exit_pvp(did, code):
     if did is None:
         did = -1
@@ -123,7 +123,6 @@ def get_commands():
     c = __send_message(path='player/get_cmd/').text
     if c == '':
         return None
-    print(c)
     return json.loads(c)
 def answer(ans):
     __send_message(path='player/ans/?ans={}'.format(ans))

@@ -268,11 +268,22 @@ class StageDeckEdit(StageBase):
 
     def play(self):
         from stages.stage_pvp import StagePVP
+        from stages.stage_game import StageGame
+        color_print('发送请求中...如果您在此停留了2秒以上说明您已匹配成功但由于不明原因无法收到信息。')
+        # try:
         res = pvp(self.deck_index, -1)
-        if res:
+        color_print('请求返回')
+        if res == '0':
             self.next_stage = StagePVP(self.deck_index, -1, self.status)
         else:
-            color_print('匹配失败orz', EColor.ERROR)
+            color_print('检测到正处于对局，正在重新连接...', EColor.EMPHASIS)
+            # 断线重连
+            cmd = res.split('|')[:-1]  # 去除最后的空字符串
+            cmd[0] = cmd[0][1:]
+            self.next_stage = StageGame(
+                self.status, [json.loads(x.replace('\\\"', '\"').replace('\\\\', '\\')) for x in cmd])
+        # except Exception:
+        #     color_print('匹配失败orz', EColor.ERROR)
 
     def play_with_secret_code(self, code):
         pass

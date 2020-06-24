@@ -14,6 +14,27 @@ def _get_p(p):
         color('您', EColor.PLAYER_NAME)
 
 
+def _card_intro_add_val(c: dict):
+    """
+    展示附加值时采用的格式。
+    :param c:
+    :return:
+    """
+    be = ''
+    if len(c['buff_eff']):
+        be = '({})'.format(color(['buff_eff'][-1]), EColor.EMPHASIS)
+    if c['whole']:
+        return color('[{vid}]{name}{buff_eff}\n'
+                     '影响力/附加值: {adv}'
+                     .format(name=c['name'], buff_eff=be, vid=c['vid'],
+                             adv=c['add_val']), EColor.DEFAULT_COLOR)
+    else:
+        return color('[{vid}]???{buff_eff}\n'
+                     '影响力/附加值: {adv}'
+                     .format(buff_eff=be, vid=c['vid'],
+                             adv=c['add_val']), EColor.DEFAULT_COLOR)
+
+
 def _card_detail(c: dict):
     """
     呈现卡(约等于反序列化)。
@@ -21,11 +42,17 @@ def _card_detail(c: dict):
     :return:
     """
     be = ''
+    if len(c['buff_eff']):
+        be = '({})'.format(color(['buff_eff'][-1]), EColor.EMPHASIS)
+    if not c['whole']:
+        return color('???{buff_eff}\n'
+                     'vid: {vid}\n'
+                     '影响力/附加值: {adv}\n'
+                     '{loc}'.format(buff_eff=be, vid=c['vid'], adv=c['add_val'],
+                                    loc=location[c['location']]), EColor.DEFAULT_COLOR)
     tk = ''
     a = c['bsc_atk'] + c['buff_atk'] + c['halo_atk']
     d = c['src_def'] + c['buff_def'] + c['halo_def']
-    if len(c['buff_eff']):
-        be = '({})'.format(color(['buff_eff'][-1]), EColor.EMPHASIS)
     if int(c['is_token']):
         tk = color('(衍生)', EColor.EMPHASIS)
 
@@ -44,10 +71,22 @@ def _card_detail(c: dict):
         d = color(str(d), EColor.LESS_THAN)
 
     return color('{name}{buff_eff}\n'
-                 'gcid: {gcid}{tk}\n'
+                 'vid: {vid}{tk}\n'
                  'ATK/{atk} DEF/{def_}\n'
-                 '{loc}'.format(name=c['name'], buff_eff=be, gcid=c['gcid'],
+                 '{loc}'.format(name=c['name'], buff_eff=be, vid=c['vid'],
                           tk=tk, atk=a, def_=d, loc=location[c['location']]), EColor.DEFAULT_COLOR)
+
+
+class Player:
+    def __init__(self):
+        self.deck = list()
+        self.side = list()
+        self.hand = list()
+        self.graveyard = list()
+        self.exiled = list()
+        # 场上
+        self.in_field = list()
+        self.leader: dict = None
 
 
 class StageGame(StageBase):
@@ -56,15 +95,24 @@ class StageGame(StageBase):
     """
     def __init__(self, st, cmd: list = None):
         super().__init__(st)
-        self.running = True
-        # {gcid: {...}, ...}
-        self.cards = dict()
+        # 使用当前终端的玩家。
+        self.p1 = Player()
+        # 对方玩家。
+        self.p2 = Player()
+        # {vid: {...}, ...}
+        # 记录视觉中的卡，洗牌后重置。
+        self.visual_cards = dict()
         # game_phase
         self.phase = 0
         self.tmp_cmd = cmd
+        self.running = True
+        # 是否为先手玩家。
+        self.sp = 0
 
     def enter(self):
-        self.cmd_set['ans'] = (self.answer, '响应服务器的请求。')
+        self.cmd_set['ans'] = (self.answer, '(ans 文本)响应服务器的请求。')
+        self.cmd_set['vid'] = (self.vid, '(vid 卡片vid)从已知的情报中，获取该vid对应的卡的最后可信信息'
+                                         '(一些行为会重新生成vid)。')
         # self.cmd_set['r'] = (self.refresh, '刷新。')
         if self.tmp_cmd is not None:
             for c in self.tmp_cmd:
@@ -86,6 +134,13 @@ class StageGame(StageBase):
     def answer(self, ans):
         if self.running:
             answer(ans)
+
+    def vid(self, v):
+        v = int(v)
+        if v in self.visual_cards:
+            color_print(_card_detail(self.visual_cards[v]))
+        else:
+            color_print('不存在记录。', EColor.ERROR)
 
     def __listen(self):
         while self.running:
@@ -123,37 +178,69 @@ class StageGame(StageBase):
         elif cmd['op'] == 'ent_ph':
             msg = '进入阶段: {}'.format(game_phase[cmd['args'][0]])
         elif cmd['op'] == 'sp_decided':
+            self.sp = cmd['sd']
             msg = '{}获得了先手！'.format(_get_p(cmd['sd']))
-        elif cmd['op'] == 'upd_crd':
-            if cmd['args'][1] is None:
-                self.cards[cmd['args'][0]] = None
-            else:
-                self.cards[cmd['args'][0]] = cmd['args'][1]
-                col = EColor.DEFAULT_COLOR
-                c = self.cards[cmd['args'][0]]
-                if ECardRank(c['rank']) == ECardRank.COMMON:
-                    col = EColor.COMMON_CARD
-                elif ECardRank(c['rank']) == ECardRank.GOOD:
-                    col = EColor.GOOD_CARD
-                elif ECardRank(c['rank']) == ECardRank.TRUMP:
-                    col = EColor.TRUMP_CARD
-                self.cards[cmd['args'][0]]['name'] = color(c['name'], col)
-        elif cmd['op'] == 'rm_crd':
-            self.cards.pop(cmd['args'][0])
+        elif cmd['op'] == 'upd_vc':
+            # 是否完整。
+            c = cmd['args'][1]
+            if cmd['args'][0] not in self.visual_cards:
+                self.add_card(c)
+            self.visual_cards[cmd['args'][0]] = cmd['args'][1]
+            self.visual_cards[cmd['args'][0]]['whole'] = True
+            col = EColor.DEFAULT_COLOR
+            if ECardRank(c['rank']) == ECardRank.COMMON:
+                col = EColor.COMMON_CARD
+            elif ECardRank(c['rank']) == ECardRank.GOOD:
+                col = EColor.GOOD_CARD
+            elif ECardRank(c['rank']) == ECardRank.TRUMP:
+                col = EColor.TRUMP_CARD
+            self.visual_cards[cmd['args'][0]]['name'] = color(c['name'], col)
+        elif cmd['op'] == 'upd_vc_ano':
+            if cmd['args'][0] not in self.visual_cards:
+                self.add_card(cmd['args'][1])
+            self.visual_cards[cmd['args'][0]] = cmd['args'][1]
+            self.visual_cards[cmd['args'][0]]['whole'] = False
         elif cmd['op'] == 'req_shw_crd':
             msg = '请展示1张手牌中的{}卡。'.format(card_rank[cmd['args'][0]])
         elif cmd['op'] == 'req_chs_tgt_f' or cmd['op'] == 'req_chs_tgt':
             msg = '请选择{}个目标，输入\'ans 在卡名前方显示的序号\': \n'.format(cmd['args'][1])
             i = 0
-            for gcid in cmd['args'][0]:
-                msg += '[{}]'.format(color(str(i), EColor.EMPHASIS)) +\
-                       _card_detail(self.cards[gcid]) + '\n'
+            for vid in cmd['args'][0]:
+                msg += '[{}]'.format(color(str(i), EColor.EMPHASIS)) + \
+                       _card_detail(self.visual_cards[vid]) + '\n'
                 i += 1
         elif cmd['op'] == 'shw_crd':
             msg = '{}展示了{}。'.format(_get_p(cmd['sd']),
-                                    self.cards[cmd['args'][0]]['name'])
+                                    self.visual_cards[cmd['args'][0]]['name'])
+        elif cmd['op'] == 'shw_all_ano':
+            msg = '{}展示了{}。'.format(_get_p(cmd['sd']),
+                                    self.visual_cards[cmd['args'][0]]['name'])
         elif cmd['op'] == 'ent_tp':
             msg = '进入时点: {}'.format(time_point[cmd['args'][0]])
+        elif cmd['op'] == 'shf':
+            loc = cmd['args'][0]
+            msg = '已洗牌，{}中原先存储的全部卡vid重新生成。'.format(location[loc])
+            if self._is_mine(loc):
+                p = self.p1
+            else:
+                p = self.p2
+            if location[loc] == '手牌':
+                p.hand = list()
+            elif location[loc] == '场上':
+                p.hand = list()
+            elif location[loc] == '场下':
+                p.hand = list()
+            elif location[loc] == '卡组':
+                p.hand = list()
+            elif location[loc] == '备选卡组':
+                p.hand = list()
+            elif location[loc] == '移除':
+                p.hand = list()
+        elif cmd['op'] == 'lst_all_ano':
+            for c in self.p1.hand:
+                msg += _card_intro_add_val(c) + '\n'
+            for c in self.p2.hand:
+                msg += _card_intro_add_val(c) + '\n'
         elif cmd['op'] == 'in_err':
             msg = '错误或无效输入orz'
             col = EColor.ERROR
@@ -163,3 +250,29 @@ class StageGame(StageBase):
 
         if cmd['op'] not in ignore_list and msg != '':
             self.interrupt_input(msg, col)
+
+    def add_card(self, c):
+        if self._is_mine(c['location']):
+            p = self.p1
+        else:
+            p = self.p2
+        if location[c['location']] == '手牌':
+            p.hand.append(c)
+        elif location[c['location']] == '场上':
+            p.in_field.append(c)
+        elif location[c['location']] == '场下':
+            p.graveyard.append(c)
+        elif location[c['location']] == '卡组':
+            p.deck.append(c)
+        elif location[c['location']] == '备选卡组':
+            p.side.append(c)
+        elif location[c['location']] == '移除':
+            p.exiled.append(c)
+
+    def _is_mine(self, c_loc):
+        """
+        判断给定的区域是否属于自己。
+        :param c_loc:
+        :return:
+        """
+        return (c_loc - self.sp) % 2 == 0

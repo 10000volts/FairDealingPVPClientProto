@@ -10,6 +10,26 @@ from time import sleep
 import json
 
 
+def adj_pos(x, y):
+    """
+    生成临近的合法坐标。
+    :param x:
+    :param y:
+    :return:
+    """
+    p = y * 6 + x
+    if p == 0:
+        return p + 1, p + 6
+    elif p < 6:
+        return p - 1, p + 1, p + 6
+    elif p < 30:
+        return p - 6, p - 1, p + 1, p + 6
+    elif p < 35:
+        return p - 6, p - 1, p + 1
+    else:
+        return p - 6, p - 1
+
+
 def _get_p(p):
     return color('对方', EColor.OP_PLAYER) if p == 0 else \
         color('您', EColor.PLAYER_NAME)
@@ -244,11 +264,10 @@ class StageGame(StageBase):
             msg = '{}在({}, {})放置了{}。\n'.format(_get_p(cmd['sd']),
                                                x, y, _card_intro_add_val(c))
             self.chessboard[y * 6 + x] = c['vid']
-            cs = [self.chessboard[y * 6 + x - 1], self.chessboard[y * 6 + x + 1],
-                  self.chessboard[y * 6 + x - 6], self.chessboard[y * 6 + x + 6]]
+            cs = adj_pos(x, y)
             for ac in cs:
-                if ac is not None:
-                    self.visual_cards[ac]['add_val'] += c['add_val']
+                if self.chessboard[ac] is not None:
+                    self.visual_cards[self.chessboard[ac]]['add_val'] += c['add_val']
             self.visual_cards[cmd['args'][2]]['add_val'] = 0
             msg += self._show_chessboard()
         elif cmd['op'] == 'shw_crd':
@@ -324,6 +343,6 @@ class StageGame(StageBase):
                 if vid is not None:
                     r += _card_intro_short(self.visual_cards[vid])
                 else:
-                    r += '(empty)    、'
+                    r += color('({}, {})'.format(x, y), EColor.EMPHASIS) + '    、'
             r += '\n'
         return r

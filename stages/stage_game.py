@@ -1,7 +1,8 @@
 from stages.stage_base import StageBase
 from utils.color import color, color_print, EColor
 from utils.common import get_commands, chat, query_interval, answer
-from utils.constants import game_phase, time_point, card_rank, location, ECardRank
+from utils.constants import game_phase, time_point, card_rank, location, ECardRank\
+    , effect_desc
 from custom.msg_ignore import ignore_list
 
 from threading import Thread
@@ -14,6 +15,26 @@ def _get_p(p):
         color('您', EColor.PLAYER_NAME)
 
 
+def _num_print(num, src_num):
+    if num > src_num:
+        return color(str(num), EColor.GREATER_THAN)
+    elif num < src_num:
+        return color(str(num), EColor.LESS_THAN)
+    return color(str(num), EColor.EQUAL_TO)
+
+
+def _card_intro_short(c: dict):
+    """
+    放置/取走阶段时采用的格式。
+    :param c:
+    :return:
+    """
+    if c['whole']:
+        return '{name} {adv}、'.format(name=c['name'], adv=_num_print(c['add_val'], 0))
+    else:
+        return '？？？ {adv}、'.format(adv=_num_print(c['add_val'], 0))
+
+
 def _card_intro_add_val(c: dict):
     """
     展示附加值时采用的格式。
@@ -22,17 +43,16 @@ def _card_intro_add_val(c: dict):
     """
     be = ''
     if len(c['buff_eff']):
-        be = '({})'.format(color(['buff_eff'][-1]), EColor.EMPHASIS)
+        if len(c['buff_eff']) > 1:
+            be = '(..., {})'.format(color(effect_desc[c['buff_eff'][-1]]), EColor.EMPHASIS)
+        else:
+            be = '({})'.format(color(effect_desc[c['buff_eff'][0]]), EColor.EMPHASIS)
     if c['whole']:
-        return color('[{vid}]{name}{buff_eff}\n'
-                     '影响力/附加值: {adv}'
-                     .format(name=c['name'], buff_eff=be, vid=c['vid'],
-                             adv=c['add_val']), EColor.DEFAULT_COLOR)
+        return '[{vid}]{name}{buff_eff}({adv})'.format(
+            name=c['name'], buff_eff=be, vid=c['vid'], adv=_num_print(c['add_val'], 0))
     else:
-        return color('[{vid}]???{buff_eff}\n'
-                     '影响力/附加值: {adv}'
-                     .format(buff_eff=be, vid=c['vid'],
-                             adv=c['add_val']), EColor.DEFAULT_COLOR)
+        return '[{vid}]？？？{buff_eff}({adv})'.format(
+            buff_eff=be, vid=c['vid'], adv=_num_print(c['add_val'], 0))
 
 
 def _card_detail(c: dict):
@@ -43,32 +63,20 @@ def _card_detail(c: dict):
     """
     be = ''
     if len(c['buff_eff']):
-        be = '({})'.format(color(['buff_eff'][-1]), EColor.EMPHASIS)
+        be = '({})'.format(color(c['buff_eff'][-1]), EColor.EMPHASIS)
     if not c['whole']:
         return color('???{buff_eff}\n'
                      'vid: {vid}\n'
                      '影响力/附加值: {adv}\n'
-                     '{loc}'.format(buff_eff=be, vid=c['vid'], adv=c['add_val'],
+                     '{loc}'.format(buff_eff=be, vid=c['vid'], adv=_num_print(c['add_val'], 0),
                                     loc=location[c['location']]), EColor.DEFAULT_COLOR)
     tk = ''
     a = c['bsc_atk'] + c['buff_atk'] + c['halo_atk']
     d = c['src_def'] + c['buff_def'] + c['halo_def']
     if int(c['is_token']):
         tk = color('(衍生)', EColor.EMPHASIS)
-
-    if a > c['src_atk']:
-        a = color(str(a), EColor.GREATER_THAN)
-    elif a == c['src_atk']:
-        a = color(str(a), EColor.EQUAL_TO)
-    else:
-        a = color(str(a), EColor.LESS_THAN)
-
-    if d > c['src_def']:
-        d = color(str(d), EColor.GREATER_THAN)
-    elif d == c['src_def']:
-        d = color(str(d), EColor.EQUAL_TO)
-    else:
-        d = color(str(d), EColor.LESS_THAN)
+    a = _num_print(a, c['src_atk'])
+    d = _num_print(d, c['src_def'])
 
     return color('{name}{buff_eff}\n'
                  'vid: {vid}{tk}\n'
@@ -104,9 +112,19 @@ class StageGame(StageBase):
         self.visual_cards = dict()
         # game_phase
         self.phase = 0
+        self.chessboard = [None for x in range(0, 36)]
+
         self.tmp_cmd = cmd
         self.running = True
         # 是否为先手玩家。
+        self.sp = 0
+
+    def reset(self):
+        self.p1 = Player()
+        self.p2 = Player()
+        self.visual_cards = dict()
+        self.phase = 0
+        self.chessboard = [None for x in range(0, 36)]
         self.sp = 0
 
     def enter(self):
@@ -131,9 +149,9 @@ class StageGame(StageBase):
             for c in cs:
                 self.carry_out(c)
 
-    def answer(self, ans):
+    def answer(self, *ans):
         if self.running:
-            answer(ans)
+            answer(' '.join(ans))
 
     def vid(self, v):
         v = int(v)
@@ -170,6 +188,7 @@ class StageGame(StageBase):
             msg = '进入对局！输入非指令可以自由发言！'
             col = EColor.EMPHASIS
         elif cmd['op'] == 'startg':
+            self.reset()
             msg = '游戏开始！'
             col = EColor.EMPHASIS
         elif cmd['op'] == 'endg':
@@ -203,16 +222,36 @@ class StageGame(StageBase):
         elif cmd['op'] == 'req_shw_crd':
             msg = '请展示1张手牌中的{}卡。'.format(card_rank[cmd['args'][0]])
         elif cmd['op'] == 'req_chs_tgt_f' or cmd['op'] == 'req_chs_tgt':
-            msg = '请选择{}个目标，输入\'ans 在卡名前方显示的序号\': \n'.format(cmd['args'][1])
             i = 0
             for vid in cmd['args'][0]:
                 msg += '[{}]'.format(color(str(i), EColor.EMPHASIS)) + \
                        _card_detail(self.visual_cards[vid]) + '\n'
                 i += 1
+            msg += '请选择{}个目标，输入\"ans 在卡名前方显示的序号\": \n'.format(cmd['args'][1])
+        elif cmd['op'] == 'req_go':
+            i = 0
+            for vid in cmd['args'][0]:
+                msg += '[{}]'.format(color(str(i), EColor.EMPHASIS)) + \
+                       _card_intro_add_val(self.visual_cards[vid]) + '\n'
+                i += 1
+            msg += '请选择1张手牌放置在棋盘的空位上。\n' \
+                   '请输入\"ans 横坐标(0-5) 纵坐标(0-5) ' \
+                   '放置的卡序号\"：'
+        elif cmd['op'] == 'go':
+            x = cmd['args'][0]
+            y = cmd['args'][1]
+            c = self.visual_cards[cmd['args'][2]]
+            msg = '{}在({}, {})放置了{}。\n'.format(_get_p(cmd['sd']),
+                                               x, y, _card_intro_add_val(c))
+            self.chessboard[y * 6 + x] = c['vid']
+            cs = [self.chessboard[y * 6 + x - 1], self.chessboard[y * 6 + x + 1],
+                  self.chessboard[y * 6 + x - 6], self.chessboard[y * 6 + x + 6]]
+            for ac in cs:
+                if ac is not None:
+                    self.visual_cards[ac]['add_val'] += c['add_val']
+            self.visual_cards[cmd['args'][2]]['add_val'] = 0
+            msg += self._show_chessboard()
         elif cmd['op'] == 'shw_crd':
-            msg = '{}展示了{}。'.format(_get_p(cmd['sd']),
-                                    self.visual_cards[cmd['args'][0]]['name'])
-        elif cmd['op'] == 'shw_all_ano':
             msg = '{}展示了{}。'.format(_get_p(cmd['sd']),
                                     self.visual_cards[cmd['args'][0]]['name'])
         elif cmd['op'] == 'ent_tp':
@@ -276,3 +315,15 @@ class StageGame(StageBase):
         :return:
         """
         return (c_loc - self.sp) % 2 == 0
+
+    def _show_chessboard(self):
+        r = ''
+        for y in range(0, 6):
+            for x in range(0, 6):
+                vid = self.chessboard[y * 6 + x]
+                if vid is not None:
+                    r += _card_intro_short(self.visual_cards[vid])
+                else:
+                    r += '(empty)    、'
+            r += '\n'
+        return r

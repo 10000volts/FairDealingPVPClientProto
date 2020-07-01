@@ -123,10 +123,10 @@ class StageGame(StageBase):
     """
     def __init__(self, st, cmd: list = None):
         super().__init__(st)
-        # 使用当前终端的玩家。
-        self.p1 = Player()
-        # 对方玩家。
-        self.p2 = Player()
+        # 对方玩家，使用当前终端的玩家。players[cmd['sd']]即表示指令的发送者。
+        self.players = [Player(), Player()]
+        self.p1 = self.players[1]
+        self.p2 = self.players[0]
         # {vid: {...}, ...}
         # 记录视觉中的卡，洗牌后重置。
         self.visual_cards = dict()
@@ -140,8 +140,9 @@ class StageGame(StageBase):
         self.sp = 0
 
     def reset(self):
-        self.p1 = Player()
-        self.p2 = Player()
+        self.players = [Player(), Player()]
+        self.p1 = self.players[1]
+        self.p2 = self.players[0]
         self.visual_cards = dict()
         self.phase = 0
         self.chessboard = [None for x in range(0, 36)]
@@ -250,17 +251,22 @@ class StageGame(StageBase):
             msg += '请选择{}个目标，输入\"ans 在卡名前方显示的序号\": \n'.format(cmd['args'][1])
         elif cmd['op'] == 'req_go':
             i = 0
-            for vid in cmd['args'][0]:
+            for c in self.p1.hand:
                 msg += '[{}]'.format(color(str(i), EColor.EMPHASIS)) + \
-                       _card_intro_add_val(self.visual_cards[vid]) + '\n'
+                       _card_intro_add_val(c) + '\n'
                 i += 1
             msg += '请选择1张手牌放置在棋盘的空位上。\n' \
                    '请输入\"ans 横坐标(0-5) 纵坐标(0-5) ' \
                    '放置的卡序号\"：'
+        elif cmd['op'] == 'req_tk_crd':
+            msg += '请取走棋盘上的筹码。单次可以取走相邻的2个。\n' \
+                   '请输入\"ans 横坐标 纵坐标 ' \
+                   '附带取走方向(0表示只取1个, 1表示顺带取走右侧的1个，6表示顺带取走下方的1个。)\"：'
         elif cmd['op'] == 'go':
             x = cmd['args'][0]
             y = cmd['args'][1]
             c = self.visual_cards[cmd['args'][2]]
+            self.players[cmd['sd']].hand.remove(c)
             msg = '{}在({}, {})放置了{}。\n'.format(_get_p(cmd['sd']),
                                                x, y, _card_intro_add_val(c))
             self.chessboard[y * 6 + x] = c['vid']
@@ -270,6 +276,29 @@ class StageGame(StageBase):
                     self.visual_cards[self.chessboard[ac]]['add_val'] += c['add_val']
             self.visual_cards[cmd['args'][2]]['add_val'] = 0
             msg += self._show_chessboard()
+        elif cmd['op'] == 'tk_crd':
+            x, y, d = cmd['args']
+            a = ''
+            if d == 1:
+                a = '以及其右侧'
+                csp = [y * 6 + x, y * 6 + x + 1]
+            elif d == 6:
+                a = '以及其下方'
+                csp = [y * 6 + x, y * 6 + x + 6]
+            else:
+                csp = [y * 6 + x]
+            msg += '{}取走了位于({}, {}){}的卡。\n'.format(_get_p(cmd['sd']), x, y, a)
+            cs = list()
+            for c in csp:
+                cs.append(self.visual_cards[self.chessboard[c]])
+                self.chessboard[c] = None
+            msg += self._show_chessboard()
+            for c in cs:
+                self.players[cmd['sd']].hand.append(c)
+            if cmd['sd']:
+                msg += '您的当前手牌：\n'
+                for c in self.p1.hand:
+                    msg += _card_detail(c) + '\n'
         elif cmd['op'] == 'shw_crd':
             msg = '{}展示了{}。'.format(_get_p(cmd['sd']),
                                     self.visual_cards[cmd['args'][0]]['name'])
@@ -278,27 +307,22 @@ class StageGame(StageBase):
         elif cmd['op'] == 'shf':
             loc = cmd['args'][0]
             msg = '已洗牌，{}中原先存储的全部卡vid重新生成。'.format(location[loc])
-            if self._is_mine(loc):
-                p = self.p1
-            else:
-                p = self.p2
             if location[loc] == '手牌':
-                p.hand = list()
+                self.players[self._is_mine(loc)].hand = list()
             elif location[loc] == '场上':
-                p.hand = list()
+                self.players[self._is_mine(loc)].in_field = list()
             elif location[loc] == '场下':
-                p.hand = list()
+                self.players[self._is_mine(loc)].graveyard = list()
             elif location[loc] == '卡组':
-                p.hand = list()
+                self.players[self._is_mine(loc)].deck = list()
             elif location[loc] == '备选卡组':
-                p.hand = list()
+                self.players[self._is_mine(loc)].side = list()
             elif location[loc] == '移除':
-                p.hand = list()
+                self.players[self._is_mine(loc)].exiled = list()
         elif cmd['op'] == 'lst_all_ano':
-            for c in self.p1.hand:
-                msg += _card_intro_add_val(c) + '\n'
-            for c in self.p2.hand:
-                msg += _card_intro_add_val(c) + '\n'
+            for p in self.players:
+                for c in p.hand:
+                    msg += _card_intro_add_val(c) + '\n'
         elif cmd['op'] == 'in_err':
             msg = '错误或无效输入orz'
             col = EColor.ERROR
@@ -310,22 +334,18 @@ class StageGame(StageBase):
             self.interrupt_input(msg, col)
 
     def add_card(self, c):
-        if self._is_mine(c['location']):
-            p = self.p1
-        else:
-            p = self.p2
         if location[c['location']] == '手牌':
-            p.hand.append(c)
+            self.players[self._is_mine(c['location'])].hand.append(c)
         elif location[c['location']] == '场上':
-            p.in_field.append(c)
+            self.players[self._is_mine(c['location'])].in_field.append(c)
         elif location[c['location']] == '场下':
-            p.graveyard.append(c)
+            self.players[self._is_mine(c['location'])].graveyard.append(c)
         elif location[c['location']] == '卡组':
-            p.deck.append(c)
+            self.players[self._is_mine(c['location'])].deck.append(c)
         elif location[c['location']] == '备选卡组':
-            p.side.append(c)
+            self.players[self._is_mine(c['location'])].side.append(c)
         elif location[c['location']] == '移除':
-            p.exiled.append(c)
+            self.players[self._is_mine(c['location'])].exiled.append(c)
 
     def _is_mine(self, c_loc):
         """

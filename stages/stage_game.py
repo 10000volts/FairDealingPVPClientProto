@@ -91,18 +91,17 @@ def _card_detail(c: dict):
                      '{loc}'.format(buff_eff=be, vid=c['vid'], adv=_num_print(c['add_val'], 0),
                                     loc=location[c['location']]), EColor.DEFAULT_COLOR)
     tk = ''
-    a = c['bsc_atk'] + c['buff_atk'] + c['halo_atk']
-    d = c['src_def'] + c['buff_def'] + c['halo_def']
     if int(c['is_token']):
         tk = color('(衍生)', EColor.EMPHASIS)
-    a = _num_print(a, c['src_atk'])
-    d = _num_print(d, c['src_def'])
+    a = _num_print(c['atk'], c['src_atk'])
+    d = _num_print(c['def'], c['src_def'])
 
     return color('{name}{buff_eff}\n'
                  'vid: {vid}{tk}\n'
-                 'ATK/{atk} DEF/{def_}\n'
+                 'ATK/{atk} DEF/{def_} 影响力/附加值: {adv}\n'
                  '{loc}'.format(name=c['name'], buff_eff=be, vid=c['vid'],
-                          tk=tk, atk=a, def_=d, loc=location[c['location']]), EColor.DEFAULT_COLOR)
+                                tk=tk, atk=a, def_=d, adv=c['add_val'],
+                                loc=location[c['location']]), EColor.DEFAULT_COLOR)
 
 
 class Player:
@@ -149,9 +148,11 @@ class StageGame(StageBase):
         self.sp = 0
 
     def enter(self):
+        from stages.stage_deck_edit import detail
         self.cmd_set['ans'] = (self.answer, '(ans 文本)响应服务器的请求。')
         self.cmd_set['vid'] = (self.vid, '(vid 卡片vid)从已知的情报中，获取该vid对应的卡的最后可信信息'
                                          '(一些行为会重新生成vid)。')
+        self.cmd_set['-d'] = (detail, '(-d 卡片名)显示指定卡的详细信息。')
         # self.cmd_set['r'] = (self.refresh, '刷新。')
         if self.tmp_cmd is not None:
             for c in self.tmp_cmd:
@@ -301,7 +302,7 @@ class StageGame(StageBase):
                     msg += _card_detail(c) + '\n'
         elif cmd['op'] == 'shw_crd':
             msg = '{}展示了{}。'.format(_get_p(cmd['sd']),
-                                    self.visual_cards[cmd['args'][0]]['name'])
+                                    _card_intro_add_val(self.visual_cards[cmd['args'][0]]))
         elif cmd['op'] == 'ent_tp':
             msg = '进入时点: {}'.format(time_point[cmd['args'][0]])
         elif cmd['op'] == 'shf':

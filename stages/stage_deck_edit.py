@@ -11,6 +11,45 @@ from utils.constants import ECardType, card_type,\
 import json
 
 
+def detail(*args):
+    col = EColor.DEFAULT_COLOR
+    card_name = ' '
+    card_name = card_name.join(args)
+    c = card_detail(card_name)
+    if c['rank'] == ECardRank.COMMON.value:
+        col = EColor.COMMON_CARD
+    elif c['rank'] == ECardRank.GOOD.value:
+        col = EColor.GOOD_CARD
+    elif c['rank'] == ECardRank.TRUMP.value:
+        col = EColor.TRUMP_CARD
+    if DEBUG:
+        color_print('{} {}'.format(color(c['name'], col), c['card_id']))
+    else:
+        color_print('{}'.format(color(c['name'], col)))
+    subtype = ''
+    sts = list()
+    if c['type'] == ECardType.EMPLOYEE.value:
+        for st in employee_type.keys():
+            if st & int(c['subtype']):
+                sts.append(employee_type[st])
+        subtype = '|'.join(sts)
+    elif c['type'] == ECardType.STRATEGY.value:
+        for st in strategy_type.keys():
+            if st & int(c['subtype']):
+                sts.append(strategy_type[st])
+        subtype = '|'.join(sts)
+    color_print('{} {}'.format(card_type[int(c['type'])], subtype))
+    ss = ''
+    if len(c['series']) > 0:
+        ss = str(c['series'])
+    if c['type'] == ECardType.EMPLOYEE.value:
+        color_print('ATK {} DEF {} {}'.format(color(c['atk_eff'], EColor.ATK),
+                                              color(c['def_hp'], EColor.DEF), ss))
+    elif c['type'] == ECardType.STRATEGY.value:
+        color_print('EFF {} {}'.format(color(c['atk_eff'], EColor.DEF), ss))
+    color_print('效果: {}'.format(c['effect']))
+
+
 class StageDeckEdit(StageBase):
     def __init__(self, st: list = None):
         super().__init__(st)
@@ -28,7 +67,7 @@ class StageDeckEdit(StageBase):
         color_print('\n----卡组编辑页面----')
         self.cmd_set['-l'] = (self.list_all_cards, '列出所有卡。')
         self.cmd_set['-ld'] = (self.list_all_cards, '列出所有已保存的卡组。')
-        self.cmd_set['-d'] = (self.detail, '(-d 卡片名)显示指定卡的详细信息。')
+        self.cmd_set['-d'] = (detail, '(-d 卡片名)显示指定卡的详细信息。')
 
         self.cmd_set['rdk'] = (self.random_deck, '获得今日的随机卡组并开始编辑。(每天至多获取 1 个)')
         self.cmd_set['new'] = (self.new,
@@ -63,44 +102,6 @@ class StageDeckEdit(StageBase):
             elif c['rank'] == ECardRank.TRUMP.value:
                 col = EColor.TRUMP_CARD
             color_print('{}({})'.format(color(c['name'], col), c['limit']))
-
-    def detail(self, *args):
-        col = EColor.DEFAULT_COLOR
-        card_name = ' '
-        card_name = card_name.join(args)
-        c = card_detail(card_name)
-        if c['rank'] == ECardRank.COMMON.value:
-            col = EColor.COMMON_CARD
-        elif c['rank'] == ECardRank.GOOD.value:
-            col = EColor.GOOD_CARD
-        elif c['rank'] == ECardRank.TRUMP.value:
-            col = EColor.TRUMP_CARD
-        if DEBUG:
-            color_print('{} {}'.format(color(c['name'], col), c['card_id']))
-        else:
-            color_print('{}'.format(color(c['name'], col)))
-        subtype = ''
-        sts = list()
-        if c['type'] == ECardType.EMPLOYEE.value:
-            for st in employee_type.keys():
-                if st & int(c['subtype']):
-                    sts.append(employee_type[st])
-            subtype = '|'.join(sts)
-        elif c['type'] == ECardType.STRATEGY.value:
-            for st in strategy_type.keys():
-                if st & int(c['subtype']):
-                    sts.append(strategy_type[st])
-            subtype = '|'.join(sts)
-        color_print('{} {}'.format(card_type[int(c['type'])], subtype))
-        ss = ''
-        if len(c['series']) > 0:
-            ss = str(c['series'])
-        if c['type'] == ECardType.EMPLOYEE.value:
-            color_print('ATK {} DEF {} {}'.format(color(c['atk_eff'], EColor.ATK),
-                                               color(c['def_hp'], EColor.DEF), ss))
-        elif c['type'] == ECardType.STRATEGY.value:
-            color_print('EFF {} {}'.format(color(c['atk_eff'], EColor.DEF), ss))
-        color_print('效果: {}'.format(c['effect']))
 
     @staticmethod
     def __show_deck(deck: dict):

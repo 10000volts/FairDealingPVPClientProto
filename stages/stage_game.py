@@ -152,8 +152,17 @@ class StageGame(StageBase):
         self.cmd_set['ans'] = (self.answer, '(ans 文本)响应服务器的请求。')
         self.cmd_set['vid'] = (self.vid, '(vid 卡片vid)从已知的情报中，获取该vid对应的卡的最后可信信息'
                                          '(一些行为会重新生成vid)。')
-        self.cmd_set['-d'] = (detail, '(-d 卡片名)显示指定卡的详细信息。')
-        # self.cmd_set['r'] = (self.refresh, '刷新。')
+        self.cmd_set['-d'] = (detail, '(-d 卡片名)根据卡名查询卡并显示其详细信息。')
+        self.cmd_set['play'] = (self.play, '(play 手牌序号 放置位置(0-2:雇员区域 3-5:策略区域))'
+                                             '尝试使手牌中指定的雇员或策略登场。')
+        self.cmd_set['act'] = (self.act, '获取我方可发动的主动非触发效果的列表。')
+        self.cmd_set['set'] = (self.set, '(set 手牌序号 放置位置(0-2:雇员区域 3-5:策略区域))'
+                               '从手牌盖放卡到场上。')
+        self.cmd_set['bp'] = (self.bp, '进入战斗阶段。')
+        self.cmd_set['atk'] = (self.attack, '(atk 想要发起攻击的雇员序号)尝试用指定的雇员发动攻击。')
+        self.cmd_set['ebp'] = (self.ebp, '结束战斗阶段。')
+        self.cmd_set['end'] = (self.end, '结束本回合。')
+        self.cmd_set['give'] = (self.give, '在单局中认输。')
         if self.tmp_cmd is not None:
             for c in self.tmp_cmd:
                 self.carry_out(c)
@@ -173,7 +182,31 @@ class StageGame(StageBase):
 
     def answer(self, *ans):
         if self.running:
-            answer(' '.join(ans))
+            answer(' '.join([str(a) for a in ans]))
+
+    def play(self, ind, f_ind):
+        self.answer(0, ind, f_ind)
+
+    def act(self):
+        self.answer(1, 0)
+
+    def set(self, ind, f_ind):
+        self.answer(2, ind, f_ind)
+
+    def bp(self, ind):
+        self.answer(3, 0)
+
+    def attack(self, ind):
+        self.answer(4, ind)
+
+    def ebp(self):
+        self.answer(5, 0)
+
+    def end(self):
+        self.answer(6, 0)
+
+    def give(self):
+        self.answer(7, 0)
 
     def vid(self, v):
         v = int(v)
@@ -263,6 +296,8 @@ class StageGame(StageBase):
             msg += '请取走棋盘上的筹码。单次可以取走相邻的2个。\n' \
                    '请输入\"ans 横坐标 纵坐标 ' \
                    '附带取走方向(0表示只取1个, 1表示顺带取走右侧的1个，6表示顺带取走下方的1个。)\"：'
+        elif cmd['op'] == 'req_op':
+            msg += '轮到您行动！使用-h查看帮助。'
         elif cmd['op'] == 'go':
             x = cmd['args'][0]
             y = cmd['args'][1]

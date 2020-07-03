@@ -2,7 +2,7 @@ from stages.stage_base import StageBase
 from utils.color import color, color_print, EColor
 from utils.common import get_commands, chat, query_interval, answer
 from utils.constants import game_phase, time_point, card_rank, location, ECardRank\
-    , effect_desc
+    , effect_desc, turn_phase
 from custom.msg_ignore import ignore_list
 
 from threading import Thread
@@ -158,10 +158,8 @@ class StageGame(StageBase):
         self.cmd_set['act'] = (self.act, '获取我方可发动的主动非触发效果的列表。')
         self.cmd_set['set'] = (self.set, '(set 手牌序号 放置位置(0-2:雇员区域 3-5:策略区域))'
                                '从手牌盖放卡到场上。')
-        self.cmd_set['bp'] = (self.bp, '进入战斗阶段。')
         self.cmd_set['atk'] = (self.attack, '(atk 想要发起攻击的雇员序号)尝试用指定的雇员发动攻击。')
-        self.cmd_set['ebp'] = (self.ebp, '结束战斗阶段。')
-        self.cmd_set['end'] = (self.end, '结束本回合。')
+        self.cmd_set['np'] = (self.np, '进入自己回合的下一个阶段(主要阶段1->战斗阶段->主要阶段2->回合结束)。')
         self.cmd_set['give'] = (self.give, '在单局中认输。')
         if self.tmp_cmd is not None:
             for c in self.tmp_cmd:
@@ -193,20 +191,14 @@ class StageGame(StageBase):
     def set(self, ind, f_ind):
         self.answer(2, ind, f_ind)
 
-    def bp(self, ind):
-        self.answer(3, 0)
-
     def attack(self, ind):
-        self.answer(4, ind)
+        self.answer(3, ind)
 
-    def ebp(self):
-        self.answer(5, 0)
-
-    def end(self):
-        self.answer(6, 0)
+    def np(self):
+        self.answer(4, 0)
 
     def give(self):
-        self.answer(7, 0)
+        self.answer(5, 0)
 
     def vid(self, v):
         v = int(v)
@@ -340,6 +332,8 @@ class StageGame(StageBase):
                                     _card_intro_add_val(self.visual_cards[cmd['args'][0]]))
         elif cmd['op'] == 'ent_tp':
             msg = '进入时点: {}'.format(time_point[cmd['args'][0]])
+        elif cmd['op'] == 'ent_tph':
+            msg = '{}进入{}！'.format(_get_p(cmd['sd']), turn_phase[cmd['args'][0]])
         elif cmd['op'] == 'shf':
             loc = cmd['args'][0]
             msg = '已洗牌，{}中原先存储的全部卡vid重新生成。'.format(location[loc])

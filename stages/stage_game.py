@@ -2,7 +2,7 @@ from stages.stage_base import StageBase
 from utils.color import color, color_print, EColor
 from utils.common import get_commands, chat, query_interval, answer
 from utils.constants import game_phase, time_point, card_rank, location, ECardRank\
-    , effect_desc, turn_phase
+    , effect_desc, turn_phase, ELocation
 from custom.msg_ignore import ignore_list
 
 from threading import Thread
@@ -109,10 +109,10 @@ class Player:
         self.deck = list()
         self.side = list()
         self.hand = list()
-        self.graveyard = list()
+        self.grave = list()
         self.exiled = list()
         # 场上
-        self.in_field = list()
+        self.on_field = list()
         self.leader: dict = None
 
 
@@ -330,8 +330,19 @@ class StageGame(StageBase):
         elif cmd['op'] == 'shw_crd':
             msg = '{}展示了{}。'.format(_get_p(cmd['sd']),
                                     _card_intro_add_val(self.visual_cards[cmd['args'][0]]))
+        elif cmd['op'] == 'smn':
+            vid = cmd['args'][0]
+            pos = cmd['args'][1]
+            method = '常规' if cmd['args'][2] else ''
+            posture = '防御姿态' if cmd['args'][3] else '进攻姿态'
+            msg = '{}的{}从{}以{}{}入场！'.format(_get_p(cmd['sd']), _card_intro_add_val(self.visual_cards[vid]),
+                                            location[pos], posture, method)
+            _from = self._get_from(vid)
+            _from.remove(vid)
+            self.visual_cards[vid]
+            self._show_field()
         elif cmd['op'] == 'ent_tp':
-            msg = '进入时点: {}'.format(time_point[cmd['args'][0]])
+            msg = '\n'.join(['{}进入时点: {}'.format(_get_p(cmd['sd']), time_point[tp]) for tp in cmd['args']])
         elif cmd['op'] == 'ent_tph':
             msg = '{}进入{}！'.format(_get_p(cmd['sd']), turn_phase[cmd['args'][0]])
         elif cmd['op'] == 'shf':
@@ -340,9 +351,9 @@ class StageGame(StageBase):
             if location[loc] == '手牌':
                 self.players[self._is_mine(loc)].hand = list()
             elif location[loc] == '场上':
-                self.players[self._is_mine(loc)].in_field = list()
+                self.players[self._is_mine(loc)].on_field = list()
             elif location[loc] == '场下':
-                self.players[self._is_mine(loc)].graveyard = list()
+                self.players[self._is_mine(loc)].grave = list()
             elif location[loc] == '卡组':
                 self.players[self._is_mine(loc)].deck = list()
             elif location[loc] == '备选卡组':
@@ -367,9 +378,9 @@ class StageGame(StageBase):
         if location[c['location']] == '手牌':
             self.players[self._is_mine(c['location'])].hand.append(c)
         elif location[c['location']] == '场上':
-            self.players[self._is_mine(c['location'])].in_field.append(c)
+            self.players[self._is_mine(c['location'])].on_field.append(c)
         elif location[c['location']] == '场下':
-            self.players[self._is_mine(c['location'])].graveyard.append(c)
+            self.players[self._is_mine(c['location'])].grave.append(c)
         elif location[c['location']] == '卡组':
             self.players[self._is_mine(c['location'])].deck.append(c)
         elif location[c['location']] == '备选卡组':
@@ -383,7 +394,7 @@ class StageGame(StageBase):
         :param c_loc:
         :return:
         """
-        return (c_loc - self.sp) % 2 == 0
+        return self.sp & ELocation.P1
 
     def _show_chessboard(self):
         r = ''
@@ -396,3 +407,27 @@ class StageGame(StageBase):
                     r += color('({}, {})'.format(x, y), EColor.EMPHASIS) + '    、'
             r += '\n'
         return r
+
+    def _show_field(self):
+        """
+        展示场上的情况。
+        :return:
+        """
+        pass
+    
+    def _get_from(self, vid):
+        c = self.visual_cards[vid]
+        p = self.players[(c['location'] & ELocation.P1) == 0]
+        if c['location'] & ELocation.ON_FIELD:
+            return p.on_field
+        elif c['location'] & ELocation.HAND:
+            return p.hand
+        elif c['location'] & ELocation.DECK:
+            return p.deck
+        elif c['location'] & ELocation.SIDE:
+            return p.side
+        elif c['location'] & ELocation.GRAVE:
+            return p.grave
+        elif c['location'] & ELocation.EXILED:
+            return p.exiled
+        assert False

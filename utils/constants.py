@@ -13,6 +13,21 @@ class ECardRank(Enum):
     TRUMP = 2
 
 
+class ELocation:
+    # 先手
+    P1 = 1
+    # 后手
+    P2 = 2
+    ON_FIELD = 4
+    HAND = 8
+    GRAVE = 16
+    EXILED = 32
+    DECK = 64
+    SIDE = 128
+    UNKNOWN = 256
+    ANY = 511
+
+
 card_rank = ['普通', '优质', '王牌']
 card_type = ['', '领袖', '雇员', '策略']
 employee_type = {1: '常规', 2: '契约', 4: '继承', 8: '合约', 16: '秘密'}

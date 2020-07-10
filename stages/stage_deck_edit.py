@@ -16,11 +16,11 @@ def detail(*args):
     card_name = ' '
     card_name = card_name.join(args)
     c = card_detail(card_name)
-    if c['rank'] == ECardRank.COMMON.value:
+    if c['rank'] == ECardRank.COMMON:
         col = EColor.COMMON_CARD
-    elif c['rank'] == ECardRank.GOOD.value:
+    elif c['rank'] == ECardRank.GOOD:
         col = EColor.GOOD_CARD
-    elif c['rank'] == ECardRank.TRUMP.value:
+    elif c['rank'] == ECardRank.TRUMP:
         col = EColor.TRUMP_CARD
     if DEBUG:
         color_print('{} {}'.format(color(c['name'], col), c['card_id']))
@@ -28,12 +28,12 @@ def detail(*args):
         color_print('{}'.format(color(c['name'], col)))
     subtype = ''
     sts = list()
-    if c['type'] == ECardType.EMPLOYEE.value:
+    if c['type'] == ECardType.EMPLOYEE:
         for st in employee_type.keys():
             if st & int(c['subtype']):
                 sts.append(employee_type[st])
         subtype = '|'.join(sts)
-    elif c['type'] == ECardType.STRATEGY.value:
+    elif c['type'] == ECardType.STRATEGY:
         for st in strategy_type.keys():
             if st & int(c['subtype']):
                 sts.append(strategy_type[st])
@@ -42,10 +42,10 @@ def detail(*args):
     ss = ''
     if len(c['series']) > 0:
         ss = str(c['series'])
-    if c['type'] == ECardType.EMPLOYEE.value:
+    if c['type'] == ECardType.EMPLOYEE:
         color_print('ATK {} DEF {} {}'.format(color(c['atk_eff'], EColor.ATK),
                                               color(c['def_hp'], EColor.DEF), ss))
-    elif c['type'] == ECardType.STRATEGY.value:
+    elif c['type'] == ECardType.STRATEGY:
         color_print('EFF {} {}'.format(color(c['atk_eff'], EColor.DEF), ss))
     color_print('效果: {}'.format(c['effect']))
 
@@ -95,11 +95,11 @@ class StageDeckEdit(StageBase):
         j = list_cards()
         col = EColor.DEFAULT_COLOR
         for c in j:
-            if c['rank'] == ECardRank.COMMON.value:
+            if c['rank'] == ECardRank.COMMON:
                 col = EColor.COMMON_CARD
-            elif c['rank'] == ECardRank.GOOD.value:
+            elif c['rank'] == ECardRank.GOOD:
                 col = EColor.GOOD_CARD
-            elif c['rank'] == ECardRank.TRUMP.value:
+            elif c['rank'] == ECardRank.TRUMP:
                 col = EColor.TRUMP_CARD
             color_print('{}({})'.format(color(c['name'], col), c['limit']))
 
@@ -113,7 +113,7 @@ class StageDeckEdit(StageBase):
         for cid in deck.keys():
             rk = deck[cid][1]
             side = deck[cid][3]
-            cl[ECardRank.TRUMP.value - rk + side * 3].append(cid)
+            cl[ECardRank.TRUMP - rk + side * 3].append(cid)
         for i in range(0, 6):
             if i == 3:
                 color_print('副卡组: ', EColor.EMPHASIS)

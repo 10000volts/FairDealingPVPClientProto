@@ -1,21 +1,21 @@
 from custom.e_color import EColor
 
-_color = {EColor.DEFAULT_COLOR.value: '<dc--|{}>',
-          EColor.PLAYER_NAME.value: '<em--|{}>',
-          EColor.OP_PLAYER.value: '<op--|{}>',
-          EColor.EMPHASIS.value: '<emn-|{}>',
-          EColor.ERROR.value: '<err-|{}>',
+_color = {EColor.DEFAULT_COLOR: '<dc--|{}>',
+          EColor.PLAYER_NAME: '<em--|{}>',
+          EColor.OP_PLAYER: '<op--|{}>',
+          EColor.EMPHASIS: '<emn-|{}>',
+          EColor.ERROR: '<err-|{}>',
 
-          EColor.TRUMP_CARD.value: '<ct--|{}>',
-          EColor.GOOD_CARD.value: '<cg--|{}>',
-          EColor.COMMON_CARD.value: '<cc--|{}>',
+          EColor.TRUMP_CARD: '<ct--|{}>',
+          EColor.GOOD_CARD: '<cg--|{}>',
+          EColor.COMMON_CARD: '<cc--|{}>',
 
-          EColor.ATK.value: '<atk-|{}>',
-          EColor.DEF.value: '<def-|{}>',
+          EColor.ATK: '<atk-|{}>',
+          EColor.DEF: '<def-|{}>',
 
-          EColor.GREATER_THAN.value: '<gt0-|{}>',
-          EColor.EQUAL_TO.value: '<equ-|{}>',
-          EColor.LESS_THAN.value: '<lt0-|{}>',
+          EColor.GREATER_THAN: '<gt0-|{}>',
+          EColor.EQUAL_TO: '<equ-|{}>',
+          EColor.LESS_THAN: '<lt0-|{}>',
           }
 
 _color_ind = {'<dc--|': EColor.DEFAULT_COLOR.value,
@@ -76,11 +76,11 @@ def color_print(text: str, c=EColor.DEFAULT_COLOR, cover=False):
         print(res_text)
 
 
-def color(text: str, c=EColor.DEFAULT_COLOR):
+def color(text, c=EColor.DEFAULT_COLOR):
     """
     上色。
     :param text:
     :param c:
     :return:
     """
-    return _color[c.value].format(text)
+    return _color[c].format(text)

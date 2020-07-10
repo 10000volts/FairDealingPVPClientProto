@@ -116,8 +116,10 @@ def exit_pvp(did, code):
         did = -1
     __send_message(path='player/exit_pvp/?did={}&code={}'.format(did, code))
 
-def chat(test):
-    __send_message(path='player/chat/?text={}'.format(test))
+def chat(text):
+    if text is None or text == '':
+        return
+    __send_message(path='player/chat/?text={}'.format(text))
 
 def get_commands():
     c = __send_message(path='player/get_cmd/').text

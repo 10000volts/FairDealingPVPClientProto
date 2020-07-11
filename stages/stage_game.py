@@ -72,6 +72,8 @@ def _card_intro_on_field(c: dict):
         elif c['type'] == ECardType.STRATEGY:
             return '[{vid}]{name}{buff_eff}{cover}[EFF {p}]'.format(
                 name=c['name'], buff_eff=be, cover=cover, vid=c['vid'], p=_num_print(c['atk'], c['src_atk']))
+        elif c['type'] == ECardType.LEADER:
+            return '领袖'
     else:
         return '[{vid}]？？？{buff_eff}{cover}[{adv}]'.format(
             buff_eff=be, vid=c['vid'], cover=cover, adv=_num_print(c['add_val'], 0))
@@ -146,6 +148,11 @@ def _card_detail(c: dict):
                      '{loc}'.format(name=c['name'], buff_eff=be, vid=c['vid'],
                                     tk=tk, atk=a, adv=c['add_val'],
                                     loc=location[c['location']]), EColor.DEFAULT_COLOR)
+    elif c['type'] == ECardType.LEADER:
+        return color('领袖{buff_eff}\n'
+                     'vid: {vid}\n'
+                     '剩余生命力: {def_}\n'.format(buff_eff=be, vid=c['vid'],
+                                              def_=d), EColor.DEFAULT_COLOR)
 
 
 class FixedLengthList(list):
@@ -220,7 +227,8 @@ class StageGame(StageBase):
                                '从手牌盖放卡到场上。')
         self.cmd_set['atk'] = (self.attack, '(atk 想要发起攻击的雇员序号)尝试用指定的雇员发动攻击。')
         self.cmd_set['np'] = (self.np, '进入自己回合的下一个阶段(主要阶段1-战斗阶段-主要阶段2-回合结束)。')
-        self.cmd_set['give'] = (self.give, '在单局中认输。')
+        self.cmd_set['c'] = (self.cancel, '取消当前的非强制操作。')
+        self.cmd_set['gg'] = (self.give, '在单局中认输。')
         if self.tmp_cmd is not None:
             for c in self.tmp_cmd:
                 self.carry_out(c)
@@ -259,6 +267,9 @@ class StageGame(StageBase):
 
     def give(self):
         self.answer(5, 0)
+
+    def cancel(self):
+        self.answer('cancel')
 
     def vid(self, v):
         v = int(v)
@@ -315,7 +326,7 @@ class StageGame(StageBase):
             # 是否完整。
             c = cmd['args'][1]
             if c['type'] == ECardType.LEADER:
-                if cmd['sd']:
+                if self.get_player(c['location']) is self.p1:
                     self.p1.leader = c
                 else:
                     self.p2.leader = c
@@ -376,6 +387,20 @@ class StageGame(StageBase):
                    '附带取走方向(0表示只取1个, 1表示顺带取走右侧的1个，6表示顺带取走下方的1个。)\"：'
         elif cmd['op'] == 'req_op':
             msg += '轮到您行动！使用-h查看帮助。'
+        elif cmd['op'] == 'req_atk':
+            i = 0
+            for vid in cmd['args'][0]:
+                msg += '[{}]'.format(color(str(i), EColor.EMPHASIS)) + \
+                       _card_detail(self.visual_cards[vid]) + '\n'
+                i += 1
+            msg += '发起攻击！请输入\"ans 卡序号\"选择攻击目标！(输入\"c\"取消攻击)'
+        elif cmd['op'] == 'req_blk':
+            i = 0
+            for vid in cmd['args'][0]:
+                msg += '[{}]'.format(color(str(i), EColor.EMPHASIS)) + \
+                       _card_detail(self.visual_cards[vid]) + '\n'
+                i += 1
+            msg += '您被直接攻击！输入\"ans 卡序号\"进行阻挡！(输入\"c\"取消阻挡)'
         elif cmd['op'] == 'go':
             x = cmd['args'][0]
             y = cmd['args'][1]
@@ -440,11 +465,24 @@ class StageGame(StageBase):
         elif cmd['op'] == 'crd_snd2grv':
             vid = cmd['args'][0]
             c = self.visual_cards[vid]
-            msg = '{}的{}从{}送去了场下！'.format(_get_p(cmd['sd']),
-                                          _card_intro_on_field(c), location[c['location']])
-            # 卡片位置的改变在upd_vc/upd_ano_vc中实现
-            if c['location'] & ELocation.ON_FIELD:
-                msg += self._show_field()
+            msg = '{}的{}送去了场下！'.format(self.get_player_name(c), _card_intro_on_field(c))
+            msg += self._show_field()
+        elif cmd['op'] == 'atk':
+            attacker = self.visual_cards[cmd['args'][0]]
+            target = self.visual_cards[cmd['args'][1]]
+            msg = '{}的{}对{}发起了攻击！'.format(self.get_player_name(attacker), _card_intro_on_field(attacker),
+                                          _card_intro_on_field(target))
+        elif cmd['op'] == 'blk':
+            blocker = self.visual_cards[cmd['args'][0]]
+            msg = '{}使用{}进行阻挡！'.format(self.get_player_name(blocker), _card_intro_on_field(blocker))
+        elif cmd['op'] == 'dmg':
+            c = self.visual_cards[cmd['args'][0]]
+            dmg = cmd['args'][1]
+            # todo: 当前版本中不存在拥有HP的雇员所以可以这么写，但是之后的版本中存在用HP代替DEF的合约雇员。
+            msg = '{}受到了{}伤害！剩余生命力: {}'.format(self.get_player_name(c), dmg, c['def'])
+        elif cmd['op'] == 'crd_des':
+            c = self.visual_cards[cmd['args'][0]]
+            msg = '{}的{}被摧毁！'.format(self.get_player_name(c), _card_intro_on_field(c))
         elif cmd['op'] == 'ent_tp':
             msg = '\n'.join(['{}进入时点: {}'.format(_get_p(cmd['sd']), time_point[tp]) for tp in cmd['args']])
         elif cmd['op'] == 'ent_tph':
@@ -508,6 +546,9 @@ class StageGame(StageBase):
         """
         return self.players[loc % 2 == self.sp]
 
+    def get_player_name(self, c):
+        return _get_p(c['location'] % 2 == self.sp)
+
     def _show_chessboard(self):
         r = ''
         for y in range(0, 6):
@@ -527,12 +568,12 @@ class StageGame(StageBase):
         展示场上的情况。
         :return:
         """
-        r = '\n{}剩余生命力: {}\n'.format(color('对方', EColor.OP_PLAYER), self.p2.leader['def'])
+        r = '\n{}剩余生命力: {}\n'.format(color('对方', EColor.OP_PLAYER), _num_print(self.p2.leader['def'], 10000))
         for i in self.op_ind_list:
             r += '[{}]{} '.format(i, _card_intro_on_field(self.p2.on_field[i]))
             if (i == 5) | (i == 2):
                 r += '\n'
-        r += '{}的剩余生命力: {}\n'.format(color('您', EColor.PLAYER_NAME), self.p1.leader['def'])
+        r += '{}的剩余生命力: {}\n'.format(color('您', EColor.PLAYER_NAME), _num_print(self.p1.leader['def'], 10000))
         for i in self.my_ind_list:
             r += '[{}]{} '.format(color(i, EColor.EMPHASIS), _card_intro_on_field(self.p1.on_field[i]))
             if (i == 5) | (i == 2):

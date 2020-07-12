@@ -282,7 +282,7 @@ class StageGame(StageBase):
     def list_cards(self, loc):
         ls = self.get_from(int(loc))
         for i in range(0, len(ls)):
-            color_print('[{}]{}'.format(color(i, EColor.EMPHASIS), _card_detail(ls[i])))
+            color_print('[{}]{}'.format(color(i, EColor.EMPHASIS), _card_detail(self.visual_cards[ls[i]])))
 
     def __listen(self):
         while self.running:

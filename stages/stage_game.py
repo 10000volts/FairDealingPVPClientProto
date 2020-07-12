@@ -340,7 +340,8 @@ class StageGame(StageBase):
                 else:
                     old = self.visual_cards[cmd['args'][0]]
                     if c['location'] != old['location']:
-                        self.get_from(old['location']).remove(old['vid'])
+                        if old['vid'] in self.get_from(old['location']):
+                            self.get_from(old['location']).remove(old['vid'])
                         self.add_card(c)
                 # if c['location'] & ELocation.ON_FIELD:
                 #     msg += self._show_field()

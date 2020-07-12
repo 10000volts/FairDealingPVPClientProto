@@ -13,6 +13,7 @@ class StageBase:
         self.cmd_set['exit'] = (self.logout_and_exit, '退出并注销登录。')
         self.next_stage: StageBase = None
         self.status = status if status is not None else list()
+        self.last_cmd = ''
 
     def enter(self):
         while self.next_stage is None:
@@ -20,6 +21,7 @@ class StageBase:
             if len(self.status) > 0:
                 in_hint = '({}) >>> '.format('、'.join(self.status))
             cmd = input(in_hint)
+            self.last_cmd = cmd
             el = cmd.strip().split(' ')
             ins = el[0]
             if len(el) > 1:

@@ -51,8 +51,6 @@ def _card_intro_on_field(c: dict):
     :param c:
     :return:
     """
-    if c is None:
-        return '(empty)          '
     be = ''
     if len(c['buff_eff']):
         if len(c['buff_eff']) > 1:
@@ -121,7 +119,7 @@ def _card_detail(c: dict):
         return '(empty)'
     be = ''
     if len(c['buff_eff']):
-        be = '({})'.format(color(c['buff_eff'][-1]), EColor.EMPHASIS)
+        be = '({})'.format(color(effect_desc[c['buff_eff'][-1]]), EColor.EMPHASIS)
     if not c['whole']:
         return color('？？？{buff_eff}\n'
                      'vid: {vid}\n'
@@ -196,11 +194,12 @@ class StageGame(StageBase):
         # game_phase
         self.phase = 0
         self.chessboard = FixedLengthList(36)
+        # 是否为先手玩家。
+        self.sp = 0
+        self.last_tp = None
 
         self.tmp_cmd = cmd
         self.running = True
-        # 是否为先手玩家。
-        self.sp = 0
 
     def reset(self):
         self.players = [Player(), Player()]
@@ -210,6 +209,7 @@ class StageGame(StageBase):
         self.phase = 0
         self.chessboard = [None for x in range(0, 36)]
         self.sp = 0
+        self.last_tp = None
 
     def enter(self):
         from stages.stage_deck_edit import detail
@@ -238,6 +238,7 @@ class StageGame(StageBase):
 
     def default_cmd(self, cmd):
         if self.running:
+            color_print('聊天消息已发送~')
             chat(cmd)
 
     def refresh(self):
@@ -339,8 +340,10 @@ class StageGame(StageBase):
                 else:
                     old = self.visual_cards[cmd['args'][0]]
                     if c['location'] != old['location']:
-                        self.get_from(old['location']).remove(old)
+                        self.get_from(old['location']).remove(old['vid'])
                         self.add_card(c)
+                # if c['location'] & ELocation.ON_FIELD:
+                #     msg += self._show_field()
                 self.visual_cards[cmd['args'][0]] = c
                 self.visual_cards[cmd['args'][0]]['whole'] = True
                 col = EColor.DEFAULT_COLOR
@@ -363,6 +366,19 @@ class StageGame(StageBase):
                     self.add_card(c)
             self.visual_cards[cmd['args'][0]] = c
             self.visual_cards[cmd['args'][0]]['whole'] = False
+        elif cmd['op'] == 'req_rct':
+            msg = '最新时点: {}\n您有效果可以连锁发动，是否连锁？'.format(self.last_tp)
+        elif cmd['op'] == 'req_yn':
+            msg = '是/否？(回复\"ans 0或1\")'
+        elif cmd['op'] == 'req_chs_eff':
+            i = 0
+            for ef in cmd['args'][0]:
+                msg += '[{}]{}\n{}\n'.format(color(str(i), EColor.EMPHASIS),
+                                           _card_intro_on_field(self.visual_cards[ef[0]]), effect_desc[ef[1]])
+                i += 1
+            msg += '请选择要发动的效果：(回复\"ans 效果序号\"或\"c\"取消)'
+        elif cmd['op'] == 'req_shw_crd':
+            msg = '请展示1张手牌中的{}卡。'.format(card_rank[cmd['args'][0]])
         elif cmd['op'] == 'req_shw_crd':
             msg = '请展示1张手牌中的{}卡。'.format(card_rank[cmd['args'][0]])
         elif cmd['op'] == 'req_chs_tgt_f' or cmd['op'] == 'req_chs_tgt':
@@ -376,7 +392,7 @@ class StageGame(StageBase):
             i = 0
             for c in self.p1.hand:
                 msg += '[{}]'.format(color(str(i), EColor.EMPHASIS)) + \
-                       _card_intro_add_val(c) + '\n'
+                       _card_intro_add_val(self.visual_cards[c]) + '\n'
                 i += 1
             msg += '请选择1张手牌放置在棋盘的空位上。\n' \
                    '请输入\"ans 横坐标(0-5) 纵坐标(0-5) ' \
@@ -405,7 +421,7 @@ class StageGame(StageBase):
             x = cmd['args'][0]
             y = cmd['args'][1]
             c = self.visual_cards[cmd['args'][2]]
-            self.players[cmd['sd']].hand.remove(c)
+            self.players[cmd['sd']].hand.remove(c['vid'])
             msg = '{}在({}, {})放置了{}。\n'.format(_get_p(cmd['sd']),
                                                x, y, _card_intro_add_val(c))
             self.chessboard[y * 6 + x] = c['vid']
@@ -456,6 +472,10 @@ class StageGame(StageBase):
             msg = '{}在位置{}发动了{}！\n'.format(_get_p(cmd['sd']), c['inf_pos'], _card_intro_on_field(c))
             # 卡片位置的改变在upd_vc/upd_ano_vc中实现
             msg += self._show_field()
+        elif cmd['op'] == 'act_eff':
+            vid = cmd['args'][0]
+            c = self.visual_cards[vid]
+            msg = '{}的{}效果发动！\n'.format(_get_p(cmd['sd']), _card_intro_on_field(c))
         elif cmd['op'] == 'set_crd':
             vid = cmd['args'][0]
             c = self.visual_cards[vid]
@@ -479,12 +499,18 @@ class StageGame(StageBase):
             c = self.visual_cards[cmd['args'][0]]
             dmg = cmd['args'][1]
             # todo: 当前版本中不存在拥有HP的雇员所以可以这么写，但是之后的版本中存在用HP代替DEF的合约雇员。
-            msg = '{}受到了{}伤害！剩余生命力: {}'.format(self.get_player_name(c), dmg, c['def'])
+            msg = '{}受到了{}伤害！剩余生命力: {}'.format(self.get_player_name(c), dmg, _num_print(c['def'], 10000))
+        elif cmd['op'] == 'hp_cst':
+            c = self.visual_cards[cmd['args'][0]]
+            dmg = cmd['args'][1]
+            # todo: 当前版本中不存在拥有HP的雇员所以可以这么写，但是之后的版本中存在用HP代替DEF的合约雇员。
+            msg = '{}支付了{}生命力！剩余生命力: {}'.format(self.get_player_name(c), dmg, _num_print(c['def'], 10000))
         elif cmd['op'] == 'crd_des':
             c = self.visual_cards[cmd['args'][0]]
             msg = '{}的{}被摧毁！'.format(self.get_player_name(c), _card_intro_on_field(c))
         elif cmd['op'] == 'ent_tp':
             msg = '\n'.join(['{}进入时点: {}'.format(_get_p(cmd['sd']), time_point[tp]) for tp in cmd['args']])
+            self.last_tp = time_point[cmd['args'][-1]]
         elif cmd['op'] == 'ent_tph':
             msg = '{}进入{}！'.format(_get_p(cmd['sd']), turn_phase[cmd['args'][0]])
         elif cmd['op'] == 'shf':
@@ -505,9 +531,9 @@ class StageGame(StageBase):
         elif cmd['op'] == 'lst_all_ano':
             for p in self.players:
                 for c in p.hand:
-                    msg += _card_intro_add_val(c) + '\n'
+                    msg += _card_intro_add_val(self.visual_cards[c]) + '\n'
         elif cmd['op'] == 'in_err':
-            msg = game_err[cmd['args'][0]]
+            msg = game_err[cmd['args'][0]] + '(您的输入: \"{}\")'.format(self.last_cmd)
             col = EColor.ERROR
         elif cmd['op'] == 'chat':
             msg = cmd['args']
@@ -519,9 +545,9 @@ class StageGame(StageBase):
     def add_card(self, c) -> None:
         if c['location'] & ELocation.ON_FIELD:
             assert self.get_player(c['location']).on_field[c['inf_pos']] is None
-            self.get_player(c['location']).on_field[c['inf_pos']] = c
+            self.get_player(c['location']).on_field[c['inf_pos']] = c['vid']
         else:
-            self.get_from(c['location']).append(c)
+            self.get_from(c['location']).append(c['vid'])
 
     def get_from(self, loc) -> list:
         if loc & ELocation.ON_FIELD:
@@ -570,12 +596,19 @@ class StageGame(StageBase):
         """
         r = '\n{}剩余生命力: {}\n'.format(color('对方', EColor.OP_PLAYER), _num_print(self.p2.leader['def'], 10000))
         for i in self.op_ind_list:
-            r += '[{}]{} '.format(i, _card_intro_on_field(self.p2.on_field[i]))
+            if self.p2.on_field[i] is not None:
+                r += '[{}]{} '.format(i, _card_intro_on_field(self.visual_cards[self.p2.on_field[i]]))
+            else:
+                r += '(empty)          '
             if (i == 5) | (i == 2):
                 r += '\n'
         r += '{}的剩余生命力: {}\n'.format(color('您', EColor.PLAYER_NAME), _num_print(self.p1.leader['def'], 10000))
         for i in self.my_ind_list:
-            r += '[{}]{} '.format(color(i, EColor.EMPHASIS), _card_intro_on_field(self.p1.on_field[i]))
+            if self.p1.on_field[i] is not None:
+                r += '[{}]{} '.format(color(i, EColor.EMPHASIS),
+                                      _card_intro_on_field(self.visual_cards[self.p1.on_field[i]]))
+            else:
+                r += '(empty)          '
             if (i == 5) | (i == 2):
                 r += '\n'
         return r

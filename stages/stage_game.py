@@ -84,9 +84,9 @@ def _card_intro_short(c: dict):
     :return:
     """
     if c['whole']:
-        return '{name} {adv}、'.format(name=c['name'], adv=_num_print(c['add_val'], 0))
+        return '{name} {adv} '.format(name=c['name'], adv=_num_print(c['add_val'], 0))
     else:
-        return '？？？ {adv}、'.format(adv=_num_print(c['add_val'], 0))
+        return '？？？ {adv} '.format(adv=_num_print(c['add_val'], 0))
 
 
 def _card_intro_add_val(c: dict):
@@ -319,6 +319,7 @@ class StageGame(StageBase):
             msg = '单局游戏结束，{}在单局中取胜。'.format(_get_p(cmd['sd']))
             col = EColor.EMPHASIS
         elif cmd['op'] == 'ent_ph':
+            self.phase = cmd['args'][0]
             msg = '进入阶段: {}'.format(game_phase[cmd['args'][0]])
         elif cmd['op'] == 'sp_decided':
             self.sp = cmd['sd']
@@ -336,13 +337,14 @@ class StageGame(StageBase):
             else:
                 if cmd['args'][0] not in self.visual_cards:
                     self.add_card(c)
-                # 已存在但位置不同时修改目前所处位置。
+                # 已存在但位置不同时修改目前所处位置(使用阶段时)。
                 else:
-                    old = self.visual_cards[cmd['args'][0]]
-                    if c['location'] != old['location']:
-                        if old['vid'] in self.get_from(old['location']):
-                            self.get_from(old['location']).remove(old['vid'])
-                        self.add_card(c)
+                    if self.phase == 7:
+                        old = self.visual_cards[cmd['args'][0]]
+                        if c['location'] != old['location']:
+                            if old['vid'] in self.get_from(old['location']):
+                                self.get_from(old['location']).remove(old['vid'])
+                            self.add_card(c)
                 # if c['location'] & ELocation.ON_FIELD:
                 #     msg += self._show_field()
                 self.visual_cards[cmd['args'][0]] = c
@@ -582,9 +584,9 @@ class StageGame(StageBase):
             for x in range(0, 6):
                 vid = self.chessboard[y * 6 + x]
                 if vid is not None:
-                    r += _card_intro_short(self.visual_cards[vid])
+                    r += '[{}]{}'.format(color(x, EColor.EMPHASIS), _card_intro_short(self.visual_cards[vid]))
                 else:
-                    r += color('({}, {})'.format(x, y), EColor.EMPHASIS) + '    、'
+                    r += color('({}, {})'.format(x, y), EColor.EMPHASIS) + '      '
             r += '\n'
         return r
 
@@ -600,7 +602,7 @@ class StageGame(StageBase):
             if self.p2.on_field[i] is not None:
                 r += '[{}]{} '.format(i, _card_intro_on_field(self.visual_cards[self.p2.on_field[i]]))
             else:
-                r += '(empty)          '
+                r += '[{}](empty)          '.format(i)
             if (i == 5) | (i == 2):
                 r += '\n'
         r += '{}的剩余生命力: {}\n'.format(color('您', EColor.PLAYER_NAME), _num_print(self.p1.leader['def'], 10000))
@@ -609,7 +611,7 @@ class StageGame(StageBase):
                 r += '[{}]{} '.format(color(i, EColor.EMPHASIS),
                                       _card_intro_on_field(self.visual_cards[self.p1.on_field[i]]))
             else:
-                r += '(empty)          '
+                r += '[{}](empty)          '.format(color(i, EColor.EMPHASIS))
             if (i == 5) | (i == 2):
                 r += '\n'
         return r

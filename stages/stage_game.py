@@ -446,7 +446,7 @@ class StageGame(StageBase):
             msg += '{}取走了位于({}, {}){}的卡。\n'.format(_get_p(cmd['sd']), x, y, a)
             cs = list()
             for c in csp:
-                cs.append(self.visual_cards[self.chessboard[c]])
+                cs.append(self.chessboard[c])
                 self.chessboard[c] = None
             msg += self._show_chessboard()
             for c in cs:
@@ -454,7 +454,7 @@ class StageGame(StageBase):
             if cmd['sd']:
                 msg += '您的当前手牌：\n'
                 for c in self.p1.hand:
-                    msg += _card_detail(c) + '\n'
+                    msg += _card_detail(self.visual_cards[c]) + '\n'
         elif cmd['op'] == 'shw_crd':
             msg = '{}展示了{}。'.format(_get_p(cmd['sd']),
                                     _card_intro_add_val(self.visual_cards[cmd['args'][0]]))

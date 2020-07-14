@@ -225,6 +225,7 @@ class StageGame(StageBase):
         self.cmd_set['act'] = (self.act, '获取我方可发动的主动非触发效果的列表。')
         self.cmd_set['set'] = (self.set, '(set 手牌序号 放置位置(0-2:雇员区域 3-5:策略区域))'
                                '从手牌盖放卡到场上。')
+        self.cmd_set['cp'] = (self.cp, '(cp 自己场上的卡序号)尝试作指定雇员的姿态转换/发动盖放的指定策略。')
         self.cmd_set['atk'] = (self.attack, '(atk 想要发起攻击的雇员序号)尝试用指定的雇员发动攻击。')
         self.cmd_set['np'] = (self.np, '进入自己回合的下一个阶段(主要阶段1-战斗阶段-主要阶段2-回合结束)。')
         self.cmd_set['c'] = (self.cancel, '取消当前的非强制操作。')
@@ -259,6 +260,9 @@ class StageGame(StageBase):
 
     def set(self, ind, f_ind):
         self.answer(2, ind, f_ind)
+
+    def cp(self, ind):
+        self.answer(6, ind)
 
     def attack(self, ind):
         self.answer(3, ind)
@@ -360,19 +364,19 @@ class StageGame(StageBase):
         elif cmd['op'] == 'upd_vc_ano':
             c = cmd['args'][1]
             if cmd['args'][0] not in self.visual_cards:
-                self.add_card(cmd['args'][1])
+                self.add_card(c)
             # 已存在但位置不同时修改目前所处位置。
             else:
                 old = self.visual_cards[cmd['args'][0]]
                 if c['location'] != old['location']:
-                    self.get_from(old['location']).remove(old)
+                    self.get_from(old['location']).remove(old['vid'])
                     self.add_card(c)
             self.visual_cards[cmd['args'][0]] = c
             self.visual_cards[cmd['args'][0]]['whole'] = False
         elif cmd['op'] == 'req_rct':
             msg = '最新时点: {}\n您有效果可以连锁发动，是否连锁？'.format(self.last_tp)
         elif cmd['op'] == 'req_yn':
-            msg = '是/否？(回复\"ans 0或1\")'
+            msg = '是/否？(回复\"ans 1或0\")'
         elif cmd['op'] == 'req_chs_eff':
             i = 0
             for ef in cmd['args'][0]:
@@ -465,8 +469,8 @@ class StageGame(StageBase):
             method = '常规' if cmd['args'][1] else ''
             c = self.visual_cards[vid]
             posture = '防御姿态' if c['posture'] else '进攻姿态'
-            msg = '{}的{}从{}以{}{}入场！\n'.format(_get_p(cmd['sd']), _card_intro_add_val(c),
-                                            location[c['location']], posture, method)
+            msg = '{}的{}以{}{}入场！\n'.format(_get_p(cmd['sd']), _card_intro_add_val(c),
+                                           posture, method)
             # 卡片位置的改变在upd_vc/upd_ano_vc中实现
             msg += self._show_field()
         elif cmd['op'] == 'act_stg':
@@ -512,7 +516,7 @@ class StageGame(StageBase):
             c = self.visual_cards[cmd['args'][0]]
             msg = '{}的{}被摧毁！'.format(self.get_player_name(c), _card_intro_on_field(c))
         elif cmd['op'] == 'ent_tp':
-            msg = '\n'.join(['{}进入时点: {}'.format(_get_p(cmd['sd']), time_point[tp]) for tp in cmd['args']])
+            msg = '\n'.join(['进入时点: {}'.format(time_point[tp]) for tp in cmd['args']])
             self.last_tp = time_point[cmd['args'][-1]]
         elif cmd['op'] == 'ent_tph':
             msg = '{}进入{}！'.format(_get_p(cmd['sd']), turn_phase[cmd['args'][0]])

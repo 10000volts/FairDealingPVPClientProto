@@ -515,6 +515,9 @@ class StageGame(StageBase):
         elif cmd['op'] == 'crd_des':
             c = self.visual_cards[cmd['args'][0]]
             msg = '{}的{}被摧毁！'.format(self.get_player_name(c), _card_intro_on_field(c))
+        elif cmd['op'] == 'crd_cp':
+            c = self.visual_cards[cmd['args'][0]]
+            msg = '{}的{}转换了姿态！'.format(self.get_player_name(c), _card_intro_on_field(c))
         elif cmd['op'] == 'ent_tp':
             msg = '\n'.join(['进入时点: {}'.format(time_point[tp]) for tp in cmd['args']])
             self.last_tp = time_point[cmd['args'][-1]]

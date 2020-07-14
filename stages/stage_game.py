@@ -410,6 +410,8 @@ class StageGame(StageBase):
                    '附带取走方向(0表示只取1个, 1表示顺带取走右侧的1个，6表示顺带取走下方的1个。)\"：'
         elif cmd['op'] == 'req_op':
             msg += '轮到您行动！使用-h查看帮助。'
+        elif cmd['op'] == 'req_num':
+            msg += '请输入一个在[{}, {})的数字。'.format(cmd['args'][0], cmd['args'][1])
         elif cmd['op'] == 'req_atk':
             i = 0
             for vid in cmd['args'][0]:

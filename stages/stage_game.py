@@ -196,7 +196,6 @@ class StageGame(StageBase):
         self.chessboard = FixedLengthList(36)
         # 是否为先手玩家。
         self.sp = 0
-        self.last_tp = None
 
         self.tmp_cmd = cmd
         self.running = True
@@ -209,7 +208,6 @@ class StageGame(StageBase):
         self.phase = 0
         self.chessboard = [None for x in range(0, 36)]
         self.sp = 0
-        self.last_tp = None
 
     def enter(self):
         from stages.stage_deck_edit import detail
@@ -286,7 +284,8 @@ class StageGame(StageBase):
     def list_cards(self, loc):
         ls = self.get_from(int(loc))
         for i in range(0, len(ls)):
-            color_print('[{}]{}'.format(color(i, EColor.EMPHASIS), _card_detail(self.visual_cards[ls[i]])))
+            if ls[i] is not None:
+                color_print('[{}]{}'.format(color(i, EColor.EMPHASIS), _card_detail(self.visual_cards[ls[i]])))
 
     def __listen(self):
         while self.running:
@@ -374,7 +373,10 @@ class StageGame(StageBase):
             self.visual_cards[cmd['args'][0]] = c
             self.visual_cards[cmd['args'][0]]['whole'] = False
         elif cmd['op'] == 'req_rct':
-            msg = '最新时点: {}\n您有效果可以连锁发动，是否连锁？'.format(self.last_tp)
+            if cmd['args'][0] is None:
+                msg = '您有可以使用的主动效果，是否发动？'
+            else:
+                msg = '当前时点: {}\n您有效果可以连锁发动，是否连锁？'.format(time_point[cmd['args'][0]])
         elif cmd['op'] == 'req_yn':
             msg = '是/否？(回复\"ans 1或0\")'
         elif cmd['op'] == 'req_chs_eff':
@@ -410,8 +412,6 @@ class StageGame(StageBase):
                    '附带取走方向(0表示只取1个, 1表示顺带取走右侧的1个，6表示顺带取走下方的1个。)\"：'
         elif cmd['op'] == 'req_op':
             msg += '轮到您行动！使用-h查看帮助。'
-        elif cmd['op'] == 'req_num':
-            msg += '请输入一个在[{}, {})的数字。'.format(cmd['args'][0], cmd['args'][1])
         elif cmd['op'] == 'req_atk':
             i = 0
             for vid in cmd['args'][0]:
@@ -426,6 +426,10 @@ class StageGame(StageBase):
                        _card_detail(self.visual_cards[vid]) + '\n'
                 i += 1
             msg += '您被直接攻击！输入\"ans 卡序号\"进行阻挡！(输入\"c\"取消阻挡)'
+        elif cmd['op'] == 'req_pos':
+            msg += '请输入\"ans 位置序号\"来指定位置。'
+        elif cmd['op'] == 'req_pst':
+            msg += '请输入\"ans 0(进攻姿态)或1(防御姿态)\"来指定雇员入场姿态。'
         elif cmd['op'] == 'go':
             x = cmd['args'][0]
             y = cmd['args'][1]
@@ -522,7 +526,6 @@ class StageGame(StageBase):
             msg = '{}的{}转换了姿态！'.format(self.get_player_name(c), _card_intro_on_field(c))
         elif cmd['op'] == 'ent_tp':
             msg = '\n'.join(['进入时点: {}'.format(time_point[tp]) for tp in cmd['args']])
-            self.last_tp = time_point[cmd['args'][-1]]
         elif cmd['op'] == 'ent_tph':
             msg = '{}进入{}！'.format(_get_p(cmd['sd']), turn_phase[cmd['args'][0]])
         elif cmd['op'] == 'shf':

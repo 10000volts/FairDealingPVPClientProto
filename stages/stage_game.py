@@ -495,6 +495,16 @@ class StageGame(StageBase):
             msg = '{}在位置{}盖放了卡！\n'.format(_get_p(cmd['sd']), c['inf_pos'])
             # 卡片位置的改变在upd_vc/upd_ano_vc中实现
             msg += self._show_field()
+        elif cmd['op'] == 'crd_dcd':
+            vid = cmd['args'][0]
+            c = self.visual_cards[vid]
+            msg = '{}的{}被丢弃！'.format(self.get_player_name(c), _card_intro_on_field(c))
+            msg += self._show_field()
+        elif cmd['op'] == 'crd_snd2hnd':
+            vid = cmd['args'][0]
+            c = self.visual_cards[vid]
+            msg = '{}的{}加入了手牌！'.format(self.get_player_name(c), _card_intro_on_field(c))
+            msg += self._show_field()
         elif cmd['op'] == 'crd_snd2grv':
             vid = cmd['args'][0]
             c = self.visual_cards[vid]
@@ -513,6 +523,11 @@ class StageGame(StageBase):
             dmg = cmd['args'][1]
             # todo: 当前版本中不存在拥有HP的雇员所以可以这么写，但是之后的版本中存在用HP代替DEF的合约雇员。
             msg = '{}受到了{}伤害！剩余生命力: {}'.format(self.get_player_name(c), dmg, _num_print(c['def'], 10000))
+        elif cmd['op'] == 'hea':
+            c = self.visual_cards[cmd['args'][0]]
+            dmg = cmd['args'][1]
+            # todo: 当前版本中不存在拥有HP的雇员所以可以这么写，但是之后的版本中存在用HP代替DEF的合约雇员。
+            msg = '{}的生命力回复了{}！剩余生命力: {}'.format(self.get_player_name(c), dmg, _num_print(c['def'], 10000))
         elif cmd['op'] == 'hp_cst':
             c = self.visual_cards[cmd['args'][0]]
             dmg = cmd['args'][1]

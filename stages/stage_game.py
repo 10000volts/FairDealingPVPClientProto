@@ -2,7 +2,7 @@ from stages.stage_base import StageBase
 from utils.color import color, color_print, EColor
 from utils.common import get_commands, chat, query_interval, answer
 from utils.constants import game_phase, time_point, card_rank, location, ECardRank\
-    , effect_desc, turn_phase, ELocation, ECardType, game_err
+    , effect_desc, turn_phase, ELocation, ECardType, game_err, choice
 from custom.msg_ignore import ignore_list
 
 from threading import Thread
@@ -396,7 +396,14 @@ class StageGame(StageBase):
                 msg += '[{}]'.format(color(str(i), EColor.EMPHASIS)) + \
                        _card_detail(self.visual_cards[vid]) + '\n'
                 i += 1
-            msg += '请选择{}个目标，输入\"ans 在卡名前方显示的序号\": \n'.format(cmd['args'][1])
+            msg += '请选择{}个目标，输入\"ans 在卡名前方显示的序号\": '.format(cmd['args'][1])
+        elif cmd['op'] == 'req_chs' or cmd['op'] == 'req_chs_tgt':
+            i = 0
+            for ch in cmd['args'][0]:
+                msg += '[{}]'.format(color(str(i), EColor.EMPHASIS)) + \
+                       color(choice[ch], EColor.EMPHASIS) + '\n'
+                i += 1
+            msg += '请选择{}个选项，输入\"ans 在卡名前方显示的序号\": '.format(cmd['args'][1])
         elif cmd['op'] == 'req_go':
             i = 0
             for c in self.p1.hand:
@@ -430,6 +437,8 @@ class StageGame(StageBase):
             msg += '请输入\"ans 位置序号\"来指定位置。'
         elif cmd['op'] == 'req_pst':
             msg += '请输入\"ans 0(进攻姿态)或1(防御姿态)\"来指定雇员入场姿态。'
+        elif cmd['op'] == 'req_num':
+            msg += '请输入\"ans 一个在[{}, {}]的数字\"。'.format(cmd['args'][0], cmd['args'][1])
         elif cmd['op'] == 'go':
             x = cmd['args'][0]
             y = cmd['args'][1]

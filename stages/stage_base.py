@@ -28,20 +28,20 @@ class StageBase:
                 arg = el[1:]
                 if ins in self.cmd_set:
                     if not DEBUG:
-                        # try:
+                        try:
                             self.cmd_set[ins][0](*arg)
-                        # except Exception as ex:
-                        #     color_print('错误的指令格式', EColor.ERROR)
+                        except Exception as ex:
+                            color_print('错误的指令格式', EColor.ERROR)
                     else:
                         self.cmd_set[ins][0](*arg)
                 else:
                     self.default_cmd(cmd)
             elif ins in self.cmd_set:
                 if not DEBUG:
-                    # try:
+                    try:
                         self.cmd_set[ins][0]()
-                    # except Exception as ex:
-                    #     color_print('错误的指令格式', EColor.ERROR)
+                    except Exception as ex:
+                        color_print('错误的指令格式', EColor.ERROR)
                 else:
                     self.cmd_set[ins][0]()
             else:

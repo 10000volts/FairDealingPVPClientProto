@@ -3,7 +3,7 @@ from utils.color import color, color_print, EColor
 from utils.common import list_cards, card_detail, random_deck,\
     rdk_add_card, rdk_remove_card, new_deck,\
     deck_add_card, deck_remove_card, remove_deck, open_deck,\
-    pvp,\
+    pvp, list_deck,\
     DEBUG
 from utils.constants import ECardType, card_type,\
     employee_type, strategy_type, ECardRank, error_hints
@@ -66,7 +66,7 @@ class StageDeckEdit(StageBase):
     def enter(self):
         color_print('\n----卡组编辑页面----')
         self.cmd_set['-l'] = (self.list_all_cards, '列出所有卡。')
-        self.cmd_set['-ld'] = (self.list_all_cards, '列出所有已保存的卡组。')
+        self.cmd_set['-ld'] = (self.list_decks, '列出所有已保存的卡组。')
         self.cmd_set['-d'] = (detail, '(-d 卡片名)显示指定卡的详细信息。')
 
         self.cmd_set['rdk'] = (self.random_deck, '获得今日的随机卡组并开始编辑。(每天至多获取 1 个)')
@@ -152,6 +152,10 @@ class StageDeckEdit(StageBase):
             remove_deck(self.deck_index)
         except Exception as ex:
             color_print('指定的卡组不存在orz', EColor.ERROR)
+
+    def list_decks(self):
+        for dn in list_deck():
+            color_print(dn)
 
     def deck_open(self, deck_name):
         self.rdk_editing = False

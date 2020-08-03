@@ -494,6 +494,10 @@ class StageGame(StageBase):
             msg = '{}在位置{}发动了{}！\n'.format(_get_p(cmd['sd']), c['inf_pos'], _card_intro_on_field(c))
             # 卡片位置的改变在upd_vc/upd_ano_vc中实现
             msg += self._show_field()
+        elif cmd['op'] == 'cst_eff':
+            vid = cmd['args'][0]
+            c = self.visual_cards[vid]
+            msg = '{}的{}效果发动中...\n'.format(_get_p(cmd['sd']), _card_intro_on_field(c))
         elif cmd['op'] == 'act_eff':
             vid = cmd['args'][0]
             c = self.visual_cards[vid]
@@ -518,6 +522,11 @@ class StageGame(StageBase):
             vid = cmd['args'][0]
             c = self.visual_cards[vid]
             msg = '{}的{}送去了场下！'.format(self.get_player_name(c), _card_intro_on_field(c))
+            msg += self._show_field()
+        elif cmd['op'] == 'crd_snd2exd':
+            vid = cmd['args'][0]
+            c = self.visual_cards[vid]
+            msg = '{}的{}被移除！'.format(self.get_player_name(c), _card_intro_on_field(c))
             msg += self._show_field()
         elif cmd['op'] == 'atk':
             attacker = self.visual_cards[cmd['args'][0]]
@@ -549,7 +558,7 @@ class StageGame(StageBase):
             c = self.visual_cards[cmd['args'][0]]
             msg = '{}的{}转换了姿态！'.format(self.get_player_name(c), _card_intro_on_field(c))
         elif cmd['op'] == 'ent_tp':
-            msg = '\n'.join(['进入时点: {}'.format(time_point[tp]) for tp in cmd['args']])
+            msg = '进入时点: {}'.format(time_point[cmd['args'][0]])
         elif cmd['op'] == 'ent_tph':
             msg = '{}进入{}！'.format(_get_p(cmd['sd']), turn_phase[cmd['args'][0]])
         elif cmd['op'] == 'shf':

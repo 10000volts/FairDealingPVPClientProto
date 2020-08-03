@@ -91,6 +91,8 @@ def remove_deck(did):
     return __send_message(path='player/rmd/?did={}'.format(did))
 def random_deck():
     return json.loads(__send_message(path='player/rdk/').text)
+def list_deck():
+    return json.loads(__send_message(path='player/ld/').text)
 def open_deck(deck_name):
     return json.loads(__send_message(path='player/opd/?name={}'.format(deck_name)).text)
 def rdk_add_card(cid):

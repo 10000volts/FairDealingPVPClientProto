@@ -4,8 +4,8 @@ import traceback
 from time import sleep
 import os
 
-server = 'http://47.113.95.132:8082/'
-# server = 'http://127.0.0.1:8000'
+# server = 'http://47.113.95.132:8082/'
+server = 'http://127.0.0.1:8000'
 # 轮询间隔(s)
 query_interval = 0.15
 
@@ -93,8 +93,8 @@ def random_deck():
     return json.loads(__send_message(path='player/rdk/').text)
 def list_deck():
     return json.loads(__send_message(path='player/ld/').text)
-def open_deck(deck_name):
-    return json.loads(__send_message(path='player/opd/?name={}'.format(deck_name)).text)
+def open_deck(did):
+    return json.loads(__send_message(path='player/opd/?did={}'.format(did)).text)
 def rdk_add_card(cid):
     return deck_add_card(cid, None, 0)
 def deck_add_card(cid, did, side):

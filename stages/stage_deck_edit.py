@@ -105,6 +105,7 @@ class StageDeckEdit(StageBase):
 
     @staticmethod
     def __show_deck(deck: dict):
+        return
         color_print('主卡组: ', EColor.EMPHASIS)
         cl = [list(), list(), list(),
               list(), list(), list()]
@@ -157,12 +158,12 @@ class StageDeckEdit(StageBase):
         for dn in list_deck():
             color_print(dn)
 
-    def deck_open(self, deck_name):
+    def deck_open(self, did):
         self.rdk_editing = False
         self.edit_stack = list()
-
-        deck, self.deck_index = open_deck(deck_name)
-        self.__update_deck(deck)
+        self.deck_index = did
+        open_deck(did)
+        # self.__update_deck(deck)
 
     def __add_card(self, card_name):
         c = card_detail(card_name)

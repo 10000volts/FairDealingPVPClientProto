@@ -253,8 +253,8 @@ class StageGame(StageBase):
     def play(self, *args):
         self.answer(0, *args)
 
-    def act(self):
-        self.answer(1, 0)
+    def act(self, vid):
+        self.answer(1, vid)
 
     def set(self, ind, f_ind):
         self.answer(2, ind, f_ind)

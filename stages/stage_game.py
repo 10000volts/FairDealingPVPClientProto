@@ -253,8 +253,8 @@ class StageGame(StageBase):
     def play(self, *args):
         self.answer(0, *args)
 
-    def act(self, vid):
-        self.answer(1, vid)
+    def act(self):
+        self.answer(1, 0)
 
     def set(self, ind, f_ind):
         self.answer(2, ind, f_ind)
@@ -319,7 +319,7 @@ class StageGame(StageBase):
             msg = '游戏开始！'
             col = EColor.EMPHASIS
         elif cmd['op'] == 'endg':
-            msg = '单局游戏结束，{}在单局中取胜。'.format(_get_p(cmd['sd']))
+            msg = '单局游戏结束，{}在单局中取胜。 获胜原因: {}'.format(_get_p(cmd['sd']), cmd['args'][0])
             col = EColor.EMPHASIS
         elif cmd['op'] == 'ent_ph':
             self.phase = cmd['args'][0]

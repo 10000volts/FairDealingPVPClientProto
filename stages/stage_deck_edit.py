@@ -284,7 +284,7 @@ class StageDeckEdit(StageBase):
         else:
             color_print('检测到正处于对局，正在重新连接...', EColor.EMPHASIS)
             # 断线重连
-            cmd = res.split('|')[:-1]  # 去除最后的空字符串
+            cmd = res.split('|')[:-1]
             cmd[0] = cmd[0][1:]
             self.next_stage = StageGame(
                 self.status, [json.loads(x.replace('\\\"', '\"').replace('\\\\', '\\')) for x in cmd])

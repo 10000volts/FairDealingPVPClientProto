@@ -454,7 +454,9 @@ class StageGame(StageBase):
             self.visual_cards[cmd['args'][2]]['add_val'] = 0
             msg += self._show_chessboard()
         elif cmd['op'] == 'tk_crd':
-            x, y, d = cmd['args']
+            pos, d = cmd['args']
+            x = pos % 6
+            y = int(pos / 6)
             a = ''
             if d == 1:
                 a = '以及其右侧'

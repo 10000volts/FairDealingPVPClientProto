@@ -345,7 +345,8 @@ class StageGame(StageBase):
                     if self.phase == 7:
                         old = self.visual_cards[cmd['args'][0]]
                         if c['location'] != old['location']:
-                            if old['vid'] in self.get_from(old['location']):
+                            if self.get_from(old['location']) is not None and\
+                                    old['vid'] in self.get_from(old['location']):
                                 self.get_from(old['location']).remove(old['vid'])
                             self.add_card(c)
                 # if c['location'] & ELocation.ON_FIELD:
@@ -368,7 +369,9 @@ class StageGame(StageBase):
             else:
                 old = self.visual_cards[cmd['args'][0]]
                 if c['location'] != old['location']:
-                    self.get_from(old['location']).remove(old['vid'])
+                    l = self.get_from(old['location'])
+                    if l is not None:
+                        l.remove(old['vid'])
                     self.add_card(c)
             self.visual_cards[cmd['args'][0]] = c
             self.visual_cards[cmd['args'][0]]['whole'] = False
@@ -597,7 +600,9 @@ class StageGame(StageBase):
             assert self.get_player(c['location']).on_field[c['inf_pos']] is None
             self.get_player(c['location']).on_field[c['inf_pos']] = c['vid']
         else:
-            self.get_from(c['location']).append(c['vid'])
+            l = self.get_from(c['location'])
+            if l is not None:
+                l.append(c['vid'])
 
     def get_from(self, loc) -> list:
         if loc & ELocation.ON_FIELD:
@@ -612,7 +617,7 @@ class StageGame(StageBase):
             return self.get_player(loc).grave
         elif loc & ELocation.EXILED:
             return self.get_player(loc).exiled
-        assert False
+        return None
 
     def get_player(self, loc) -> Player:
         """

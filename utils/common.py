@@ -4,8 +4,8 @@ import traceback
 from time import sleep
 import os
 
-server = 'http://192.144.186.189:8082/'
-# server = 'http://127.0.0.1:8000'
+# server = 'http://192.144.186.189:8082/'
+server = 'http://127.0.0.1:8000'
 # 轮询间隔(s)
 query_interval = 0.15
 
@@ -113,6 +113,8 @@ def pvp(did, code):
     if did is None:
         did = -1
     return __send_message(path='player/pvp/?did={}&code={}'.format(did, code)).text
+def spectate(name):
+    return __send_message(path='player/sp/?name={}'.format(name)).text
 def exit_pvp(did, code):
     if did is None:
         did = -1

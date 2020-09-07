@@ -3,7 +3,7 @@ from utils.color import color, color_print, EColor
 from utils.common import list_cards, card_detail, random_deck,\
     rdk_add_card, rdk_remove_card, new_deck,\
     deck_add_card, deck_remove_card, remove_deck, open_deck,\
-    pvp, list_deck,\
+    pvp, list_deck, spectate,\
     DEBUG
 from utils.constants import ECardType, card_type,\
     employee_type, strategy_type, ECardRank, error_hints
@@ -87,7 +87,8 @@ class StageDeckEdit(StageBase):
         self.cmd_set['-m'] = (self.edit_main_deck, '切换至主卡组编辑。')
         self.cmd_set['-s'] = (self.edit_side_deck, '切换至副卡组编辑。')
         self.cmd_set['s'] = (self.save, '保存对当前卡组的修改。')
-        self.cmd_set['p'] = (self.play, '使用当前卡组与随机对手进行一场\"公平交易\"！(3局2胜)')
+        self.cmd_set['p'] = (self.play, '使用当前卡组与随机对手进行一场\"公平交易\"！')
+        self.cmd_set['sp'] = (self.spectate, '(sp 玩家昵称)观战指定的玩家')
         self.cmd_set['pwd'] = (self.play_with_secret_code, '(pwd 4位数字)使用暗号进行一场私下的\"公平交易\"……(3局2胜)')
         super().enter()
 
@@ -288,6 +289,19 @@ class StageDeckEdit(StageBase):
             cmd[0] = cmd[0][1:]
             self.next_stage = StageGame(
                 self.status, [json.loads(x.replace('\\\"', '\"').replace('\\\\', '\\')) for x in cmd])
+        # except Exception:
+        #     color_print('匹配失败orz', EColor.ERROR)
+
+    def spectate(self, pn):
+        from stages.stage_pvp import StagePVP
+        from stages.stage_game import StageGame
+        # try:
+        res = spectate(pn)
+        color_print('正在进入观战...', EColor.EMPHASIS)
+        cmd = res.split('|')[:-1]
+        cmd[0] = cmd[0][1:]
+        self.next_stage = StageGame(
+            self.status, [json.loads(x.replace('\\\"', '\"').replace('\\\\', '\\')) for x in cmd])
         # except Exception:
         #     color_print('匹配失败orz', EColor.ERROR)
 
